@@ -12,7 +12,9 @@ Rails.application.routes.draw do
   get "success_page",                to: "login#success_page"
   get "error_page",                  to: "login#error_page"
   get "category_parsing",            to: "parsing#category"
+  get "parsing_categories_start",    to: "parsing#parsing_categories_start"
   get "category_product_join_table", to: "parsing#category_product_join_table"
+  mount DelayedJobWeb => "/delayed_job"
   root :to => 'home#index'
   
   # The priority is based upon order of creation: first created -> highest priority.
