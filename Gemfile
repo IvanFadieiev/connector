@@ -46,3 +46,9 @@ group :development do
 end
 
 gem 'shopify_app', '6.2.0'
+gem 'smarter_csv'
+gem 'savon', '~> 2.11.0'
+gem 'bootstrap-sass', '~> 3.3.6'
+gem 'nprogress-rails'
+gem 'delayed_job_active_record'
+gem 'delayed_job_web', '~> 1.2', '>= 1.2.10'

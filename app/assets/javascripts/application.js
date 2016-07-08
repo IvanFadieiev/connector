@@ -11,6 +11,23 @@
 // about supported directives.
 //
 //= require jquery
+//= require bootstrap-sprockets
 //= require jquery_ujs
+//= require nprogress
+//= require nprogress-turbolinks
 //= require turbolinks
 //= require_tree .
+
+$(document).ready(function() {
+//   $(".start_parsing_categories").click(function(event){
+//       event.preventDefault();
+//     $.ajax({
+//         url: '/check_categories_parsing',             
+//         type : "GET",
+//         // cache: false,
+//         success: function (data, textStatus) { 
+//         alert('asdasd');
+//         }               
+//     });
+//   }, 3000);
+});
