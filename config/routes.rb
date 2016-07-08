@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   get "category_product_join_table", to: "parsing#category_product_join_table"
   get 'check_categories_parsing',    to: 'parsing#check_categories_parsing'
   post 'accepted_collection',        to: 'parsing#accepted_collection'
+  get 'finish_page',                 to: 'parsing#finish_page'
 
   mount DelayedJobWeb => "/delayed_job"
   root :to => 'home#index'

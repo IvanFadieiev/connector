@@ -11,7 +11,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160708084356) do
+ActiveRecord::Schema.define(version: 20160708144811) do
+
+  create_table "collections", force: :cascade do |t|
+    t.integer  "shopify_category_id"
+    t.integer  "magento_category_id"
+    t.datetime "created_at",          null: false
+    t.datetime "updated_at",          null: false
+    t.integer  "login_id"
+  end
 
   create_table "delayed_jobs", force: :cascade do |t|
     t.integer  "priority",   default: 0, null: false

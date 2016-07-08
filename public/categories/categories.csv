@@ -1,5 +1,4 @@
 category_id,parent_id,name,description,is_active,level,set
-1,0,Root Catalog,,,0,
 2,1,Topstreetwear,"{:""@xsi:type""=>""xsd:string""}",1,1,
 213,2,Latest,"{:""@xsi:type""=>""xsd:string""}",1,2,
 3,2,Pants,"In this category you find our wide selection of pants. We have divided this category into shorts, sweatpants, chinos and jeans and if you are looking for a specific fit of jeans you may choose that as well. Whether you like your jeans baggy, regular or slim you can be sure of finding what you want at TS - Top Streetwear!",1,2,
@@ -205,8 +204,7 @@ category_id,parent_id,name,description,is_active,level,set
 505,36,Dope Couture,,1,4,
 346,36,Drip,"{:""@xsi:type""=>""xsd:string""}",1,4,
 345,36,DTA,"{:""@xsi:type""=>""xsd:string""}",1,4,
-351,36,D-XEL,"D-xel is addressed to the group tweens aged 8-16 years, who is no longer children neither teens. They want to use the clothes to emphasis their personality - which should be cool, trendy and individual. D-Xel is the brand for tweens who want to express their coolness through smart clothing with funky details and the right look.
-",1,4,
+351,36,D-XEL,"D-xel is addressed to the group tweens aged 8-16 years, who is no longer children neither teens. They want to use the clothes to emphasis their personality - which should be cool, trendy and individual. D-Xel is the brand for tweens who want to express their coolness through smart clothing with funky details and the right look.",1,4,
 561,36,Delf,,1,4,
 572,36,Dangerous DNGRS,,1,4,
 659,36,Diamond Supply Co.,,1,4,
@@ -230,8 +228,7 @@ category_id,parent_id,name,description,is_active,level,set
 76,38,Fred Perry,"{:""@xsi:type""=>""xsd:string""}",1,4,
 300,38,Freegun,"{:""@xsi:type""=>""xsd:string""}",1,4,
 77,38,French Fashion,"{:""@xsi:type""=>""xsd:string""}",1,4,
-339,38,Fun Boxers,"Have you had some FUN today? Fun boxers have been on the market over 20 years, more precise since year 1991. Through a trip in the Far East their founder came up with the idea to make a FUN boxer for men, which should be comfortable and affordable. In the new millennium the company has develop and even sells underwear for girls with the same mission that its must be FUN. Over the years they never forget where it started and always looking back. The difference today is that their collection is much bigger and with the same FUN mission. 
-",1,4,
+339,38,Fun Boxers,"Have you had some FUN today? Fun boxers have been on the market over 20 years, more precise since year 1991. Through a trip in the Far East their founder came up with the idea to make a FUN boxer for men, which should be comfortable and affordable. In the new millennium the company has develop and even sells underwear for girls with the same mission that its must be FUN. Over the years they never forget where it started and always looking back. The difference today is that their collection is much bigger and with the same FUN mission. ",1,4,
 516,38,Fly53,,1,4,
 444,38,Forum,"{:""@xsi:type""=>""xsd:string""}",1,4,
 445,38,Four Square,"{:""@xsi:type""=>""xsd:string""}",0,4,
@@ -952,4 +949,3 @@ category_id,parent_id,name,description,is_active,level,set
 1637,1632,Styleguide2,,1,3,
 2051,1632,Styleguide3,,1,3,
 3173,2,Test subcategory,,0,2,
-1210,1,XMas,,0,1,
