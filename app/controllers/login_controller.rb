@@ -1,4 +1,5 @@
 class LoginController < ApplicationController
+    before_filter :set_login, except: [:create]
     def login
         @login = "login"
     end
@@ -6,6 +7,7 @@ class LoginController < ApplicationController
     def create
         @login = Login.new(login_params)
         if @login.save
+            session[:login_id] = @login.id
             savon_login
         end
     end
@@ -17,6 +19,10 @@ class LoginController < ApplicationController
     end
     
     private
+    
+    def set_login
+        @login = Login.find(session[:login_id])
+    end
     
     def login_params
         params.require(:login).permit(:username, :key, :store_id,:store_url)

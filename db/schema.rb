@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160708072951) do
+ActiveRecord::Schema.define(version: 20160708084356) do
 
   create_table "delayed_jobs", force: :cascade do |t|
     t.integer  "priority",   default: 0, null: false
@@ -33,9 +33,10 @@ ActiveRecord::Schema.define(version: 20160708072951) do
     t.string   "username"
     t.string   "key"
     t.integer  "store_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",                        null: false
+    t.datetime "updated_at",                        null: false
     t.string   "store_url"
+    t.boolean  "categories_parsed", default: false
   end
 
   create_table "shops", force: :cascade do |t|

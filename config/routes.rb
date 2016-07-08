@@ -11,9 +11,12 @@ Rails.application.routes.draw do
   post "logins",                     to: "login#create"
   get "success_page",                to: "login#success_page"
   get "error_page",                  to: "login#error_page"
-  get "category_parsing",            to: "parsing#category"
+  get "category_parsing",            to: "parsing#category", as: "category_parsing"
   get "parsing_categories_start",    to: "parsing#parsing_categories_start"
   get "category_product_join_table", to: "parsing#category_product_join_table"
+  get 'check_categories_parsing',    to: 'parsing#check_categories_parsing'
+  post 'accepted_collection',        to: 'parsing#accepted_collection'
+
   mount DelayedJobWeb => "/delayed_job"
   root :to => 'home#index'
   

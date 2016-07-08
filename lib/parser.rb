@@ -41,7 +41,7 @@ module Parser
 																						  productId: items[0][:value]
 																						 )
 																		}.body[:call_response][:call_return][:item]
-				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image' ]
+				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'set' ]
 				Parser.new_array_with_object(arrr, $column_names)
 			rescue
 				$error << items

@@ -1,1 +1,12 @@
-category products join table view
+<div class="container">
+    <div class="row">
+        <div class= "col-md-6 col-md-offset-3">
+            <br>
+            <% @all_categories.each do |category| %>
+                <%= category[:name] %><br>
+                <%= select_tag "#{category[:category_id]}_collect_ids[]", options_for_select(@shopify_collect.collect{ |u| [u.title, u.id] }), {:multiple => :multiple, rows: 8} %><br><br><br>
+            <% end %>
+            <%= button_to "Accept", accepted_collection_path %>
+        </div>
+    </div>
+</div>
