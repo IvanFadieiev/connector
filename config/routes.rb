@@ -6,7 +6,13 @@ Rails.application.routes.draw do
     get 'auth/shopify/callback' => :callback
     get 'logout' => :destroy, :as => :logout
   end
-
+  
+  get "logins",                      to: "login#login"
+  post "logins",                     to: "login#create"
+  get "success_page",                to: "login#success_page"
+  get "error_page",                  to: "login#error_page"
+  get "category_parsing",            to: "parsing#category"
+  get "category_product_join_table", to: "parsing#category_product_join_table"
   root :to => 'home#index'
   
   # The priority is based upon order of creation: first created -> highest priority.
