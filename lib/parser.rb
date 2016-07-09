@@ -9,10 +9,10 @@ require 'open-uri'
 
 module Parser
 	class Login
-		def login( url, username, key, storeView )
-			$client  = Savon.client( wsdl: url )
-			$request = $client.call( :login, message:{ magento_username: username,
-																	key: key
+		def login( login )
+			$client  = Savon.client( wsdl: login.store_url + '/api/?wsdl' )
+			$request = $client.call( :login, message:{ magento_username: login.username,
+																	key: login.key
 											    		}
 									)
 			$session = $request.body[:login_response][:login_return]
@@ -20,15 +20,15 @@ module Parser
 	end
 
 	class CategoryList
-		def categories(storeView)
+		def categories(login)
 			# Parser::Login.new.login( url, username, key, storeView )
-			$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: storeView  ) }
+			$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
 		end
 
-		def main_category(storeView)
-			$items							 = categories(storeView).body[:call_response][:call_return][:item]
-			$all_categories 		 = []
-			$error 							 = []
+		def main_category(login)
+			$items				 = categories(login).body[:call_response][:call_return][:item]
+			$all_categories 	 = []
+			$error 				 = []
 			$error_key_params 	 = []
 			$error_key_recursive = []
 			hash_params($items)
@@ -101,8 +101,8 @@ module Parser
 			( request[0].class == Array )
 		end
 
-		def create_categories_table(storeView, id)
-			Parser::CategoryList.new.main_category(storeView)
+		def create_categories_table(login)
+			Parser::CategoryList.new.main_category(login)
 			hashes = $all_categories
 			# $column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image' ]
 			s = CSV.generate do |csv|
@@ -111,7 +111,7 @@ module Parser
 			    csv << x.values
 			  end
 			end
-			File.write("public/#{id}/categories/categories.csv", s)
+			File.write("public/#{login.id}/categories/categories.csv", s)
 			p "categories is parsed"
 		end
 	end

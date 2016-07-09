@@ -9,7 +9,7 @@ class LoginController < ApplicationController
         if @login.save
             create_dirs(@login.id)
             session[:login_id] = @login.id
-            savon_login
+            savon_login(@login)
         end
     end
     

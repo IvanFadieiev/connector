@@ -5,10 +5,10 @@ class ApplicationController < ActionController::Base
   layout ShopifyApp.configuration.embedded_app? ? 'embedded_app' : 'application'
   protect_from_forgery with: :exception
   
-  def savon_login
+  def savon_login(login)
     begin
       @login = Login.find(session[:login_id])
-      Parser::Login.new.login( "#{@login.store_url}/api/?wsdl", @login.username, @login.key, @login.store_id )
+      Parser::Login.new.login( login )
       redirect_to success_page_path
     rescue
       redirect_to error_page_path
