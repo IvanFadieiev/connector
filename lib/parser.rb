@@ -41,7 +41,7 @@ module Parser
 																						  productId: items[0][:value]
 																						 )
 																		}.body[:call_response][:call_return][:item]
-				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'set' ]
+				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level']
 				Parser.new_array_with_object(arrr, $column_names)
 			rescue
 				$error << items
@@ -145,25 +145,24 @@ module Parser
 			end
 		end
 
-		def create_join_table_categories_products
+		def create_join_table_categories_products(login)
 			$array_cat = []
 			# Parser::Login.new.login( 'http://tsw-admin.icommerce.se/api/?wsdl', "developer", "zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde", 5 )
 				s = CSV.generate do |csv|
 					csv << [ "category_id", "products_id" ]
-					$parsed_data = SmarterCSV.process( "categories/categories.csv" ).map do |cat|
+					$parsed_data = SmarterCSV.process( "public/#{login.id}/categories/categories.csv" ).map do |cat|
 						id = cat[:category_id]
 						p "Parsed category #{ id }"
 						Parser::ProductList.new.category_products( id )
 						Parser::ProductList.new.check_nil( $products_to_category, id, csv )
 					end
 				end
-			File.write( 'public/categories_products/join_table_categories_products.csv', s )
+			File.write( "public/#{login.id}/categories_products/join_table_categories_products.csv", s )
 		end
 
-		def create_product_table
+		def create_product_table(login)
 			$error_with_creating_product_table = []
-			# Parser::Login.new.login( 'http://tsw-admin.icommerce.se/api/?wsdl', "developer", "zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde", 5 )
-			parsed_data = SmarterCSV.process( '#{Rails.root}/public/categories_products/join_table_categories_products.csv' ).map{ |a| a[:products_id] }
+			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }
 			array_uniq_products_ids = parsed_data.uniq
 			$custom_attr = [
 											'modelsize',
@@ -192,7 +191,8 @@ module Parser
 											'url_key',
 											'image',
 											'color',
-											'weight'
+											'weight',
+											'set'
 											]
 			$all_products = []
 			$products_with_errors = []
@@ -233,7 +233,7 @@ module Parser
 			    csv << x.values
 			  end
 			end
-			File.write('public/products/products_table.csv', s)
+			File.write("public/#{login.id}/products/products_table.csv", s)
 		end
 
 		def info_soap_product(product_id)
@@ -245,9 +245,8 @@ module Parser
 	end
 
 	class Image
-		def category_image
-			# Parser::Login.new.login( 'http://tsw-admin.icommerce.se/api/?wsdl', "developer", "zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde", 5 )
-			parsed_data = SmarterCSV.process( '#{Rails.root}/public/categories_products/join_table_categories_products.csv' ).map{ |a| a[:category_id] }.uniq
+		def category_image(login)
+			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:category_id] }.uniq
 			parsed_data.map do |category_id|
 				arrr  = $client.call(:call){ message( session: $session,
 																				 		  method: 'catalog_category.info',
@@ -257,8 +256,8 @@ module Parser
 				image = []
 				arrr.map{|a| image << a[:value] if ((a[:key] == "image" ) && (a[:value] != {:"@xsi:type"=>"xsd:string"}))}
 				unless image[0].blank?
-					open( "image/category/#{image[0]}", 'wb') do |file|
-						file << open("http://tsw-admin.icommerce.se/media/catalog/category/#{image[0]}").read
+					open( "public/#{ligin.id}/image/category/#{image[0]}", 'wb') do |file|
+						file << open("#{login.store_url}/media/catalog/category/#{image[0]}").read
 						p "Image save for #{category_id} with image name: #{image[0]}!!!"
 					end
 				else
@@ -267,10 +266,9 @@ module Parser
 			end
 		end
 
-		def product_image
+		def product_image(login)
 			$all_prod_imgs = []
-			# Parser::Login.new.login( 'http://tsw-admin.icommerce.se/api/?wsdl', "developer", "zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde", 5 )
-			parsed_data = SmarterCSV.process( '#{Rails.root}/public/categories_products/join_table_categories_products.csv' ).map{ |a| a[:products_id] }.uniq
+			parsed_data = SmarterCSV.process( "public/#{loginn.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }.uniq
 			parsed_data.map do |product_id|
 				arrr = $client.call(:call){ message( session: $session,
 																				 		  method: 'catalog_product_attribute_media.list',
@@ -282,7 +280,7 @@ module Parser
 				images.map do |img_url|
 					unless img_url.blank?
 						image_name = img_url.split("/").last
-						open( "image/product/#{image_name}", 'wb') do |file|
+						open( "public/#{login.id}/image/product/#{image_name}", 'wb') do |file|
 							file << open(img_url).read
 							p "Image #{image_name} saved for product with ID: #{product_id}!!!"
 							obj_scv = {'product_id' => product_id, 'image_name' => image_name}
@@ -300,7 +298,7 @@ module Parser
 			    csv << x.values
 			  end
 			end
-			File.write('public/image/join_table_products_images_table.csv', s)
+			File.write("public/#{login.id}/image/join_table_products_images_table.csv", s)
 		end
 	end
 

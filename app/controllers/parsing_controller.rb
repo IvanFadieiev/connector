@@ -48,15 +48,10 @@ class ParsingController < ApplicationController
     end
     
     def finish_page
-        # last part of the programm heare
+        ParserProcess.new.delay.parse_categories_attach(@login)
     end
     
     private
-    
-    # def activ_categories(id)
-    #     @all_categories = []
-    #     SmarterCSV.process( "public/categories/#{id}/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
-    # end
     
     def set_login
         @login = Login.find(session[:login_id])
