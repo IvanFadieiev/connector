@@ -7,7 +7,7 @@ class ApplicationController < ActionController::Base
   
   def savon_login
     begin
-      @login = Login.last
+      @login = Login.find(session[:login_id])
       Parser::Login.new.login( "#{@login.store_url}/api/?wsdl", @login.username, @login.key, @login.store_id )
       redirect_to success_page_path
     rescue
