@@ -101,7 +101,7 @@ module Parser
 			( request[0].class == Array )
 		end
 
-		def create_categories_table(storeView)
+		def create_categories_table(storeView, id)
 			Parser::CategoryList.new.main_category(storeView)
 			hashes = $all_categories
 			# $column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image' ]
@@ -111,7 +111,7 @@ module Parser
 			    csv << x.values
 			  end
 			end
-			File.write('public/categories/categories.csv', s)
+			File.write("public/#{id}/categories/categories.csv", s)
 			p "categories is parsed"
 		end
 	end
@@ -429,13 +429,13 @@ end
 # 		"Ok, we go ahead!"
 # 	end
 
-dirs = []
-dirs << File.dirname("#{Rails.root}/public/categories/categories.log")
-dirs << File.dirname("#{Rails.root}/public/categories_products/categories_products.log")
-dirs << File.dirname("#{Rails.root}/public/image/image.log")
-dirs << File.dirname("#{Rails.root}/public/image/category/image.log")
-dirs << File.dirname("#{Rails.root}/public/image/products/image.log")
-dirs << File.dirname("#{Rails.root}/public/products/products.log")
-dirs.map do |dir|
-  FileUtils.mkdir_p(dir) unless File.directory?(dir)
-end
+# dirs = []
+# dirs << File.dirname("#{Rails.root}/public/categories/categories.log")
+# dirs << File.dirname("#{Rails.root}/public/categories_products/categories_products.log")
+# dirs << File.dirname("#{Rails.root}/public/image/image.log")
+# dirs << File.dirname("#{Rails.root}/public/image/category/image.log")
+# dirs << File.dirname("#{Rails.root}/public/image/products/image.log")
+# dirs << File.dirname("#{Rails.root}/public/products/products.log")
+# dirs.map do |dir|
+#   FileUtils.mkdir_p(dir) unless File.directory?(dir)
+# end
