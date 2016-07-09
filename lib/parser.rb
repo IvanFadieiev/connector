@@ -270,35 +270,51 @@ module Parser
 			$all_prod_imgs = []
 			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }.uniq
 			parsed_data.map do |product_id|
-				arrr = $client.call(:call){ message( session: $session,
-																				 		  method: 'catalog_product_attribute_media.list',
-																						  productId: product_id
-																						 )
-																		}.body[:call_response][:call_return][:item]
+				arrr = $client.call(:call){ message( session:   $session,
+												     method:    'catalog_product_attribute_media.list',
+											         productId: product_id
+													 )
+											}.body[:call_response][:call_return][:item]
 				images  = []
-				arrr.map{ |a| a[:item].map{ |a| images << a[:value] if ((a[:key] == "url") ) } }
-				images.map do |img_url|
-					unless img_url.blank?
-						image_name = img_url.split("/").last
-						open( "public/#{login.id}/image/product/#{image_name}", 'wb') do |file|
-							file << open(img_url).read
-							p "Image #{image_name} saved for product with ID: #{product_id}!!!"
-							obj_scv = {'product_id' => product_id, 'image_name' => image_name}
-							$all_prod_imgs << obj_scv
+				if arrr.class == Hash
+					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
+				else
+					unless arrr == nil
+						arrr.map{ |a| a[:item].map{ |b| images << b[:value] if ((a[:key] == "url") ) } }
+					end
+				end
+				if images.any?
+					images.map do |img_url|
+						$error2 = []
+						begin
+						unless img_url.blank?
+							image_name = img_url.split("/").last
+							# open( "public/#{login.id}/image/products/#{image_name}", 'wb') do |file|
+							# 	file << open(img_url).read
+								p "Image #{img_url} added in table for product with ID: #{product_id}!!!"
+								obj_scv = {'product_id' => product_id, 'image_url' => img_url}
+								$all_prod_imgs << obj_scv
+							# end
+						else
+							p "Product with ID: #{product_id} havn`t image"
 						end
-					else
-						p "Product with ID: #{product_id} havn`t image"
+						rescue
+							$error2 << img_url
+							p '-----------------------Error($error2)---------------------------'
+							p '-----------------------Error($error2)---------------------------'
+						end
 					end
 				end
 			end
+	
 			hashes = $all_prod_imgs
 			s = CSV.generate do |csv|
-			  csv << ["product_id", "img_name"]
+			  csv << ["product_id", "image_url"]
 			  hashes.each do |x|
 			    csv << x.values
 			  end
 			end
-			File.write("public/#{login.id}/image/join_table_products_images_table.csv", s)
+			File.write("public/#{login.id}/image/products/join_table_products_images_table.csv", s)
 		end
 	end
 
