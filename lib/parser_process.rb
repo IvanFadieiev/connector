@@ -7,8 +7,8 @@ class ParserProcess
     end
     
     def parse_categories_attach(login)
-        Parser::ProductList.new.create_join_table_categories_products(login)
-        Parser::ProductList.new.create_product_table(login)
+        # Parser::ProductList.new.create_join_table_categories_products(login)
+        # Parser::ProductList.new.create_product_table(login)
         Parser::Image.new.category_image(login)
         Parser::Image.new.product_image(login)
     end

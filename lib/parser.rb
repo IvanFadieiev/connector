@@ -256,7 +256,7 @@ module Parser
 				image = []
 				arrr.map{|a| image << a[:value] if ((a[:key] == "image" ) && (a[:value] != {:"@xsi:type"=>"xsd:string"}))}
 				unless image[0].blank?
-					open( "public/#{ligin.id}/image/category/#{image[0]}", 'wb') do |file|
+					open( "public/#{login.id}/image/category/#{image[0]}", 'wb') do |file|
 						file << open("#{login.store_url}/media/catalog/category/#{image[0]}").read
 						p "Image save for #{category_id} with image name: #{image[0]}!!!"
 					end
@@ -268,7 +268,7 @@ module Parser
 
 		def product_image(login)
 			$all_prod_imgs = []
-			parsed_data = SmarterCSV.process( "public/#{loginn.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }.uniq
+			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }.uniq
 			parsed_data.map do |product_id|
 				arrr = $client.call(:call){ message( session: $session,
 																				 		  method: 'catalog_product_attribute_media.list',
