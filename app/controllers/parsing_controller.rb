@@ -1,4 +1,4 @@
-class ParsingController < ApplicationController
+class ParsingController < AuthenticatedController
     before_filter :set_login
     # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
     
@@ -48,7 +48,7 @@ class ParsingController < ApplicationController
     end
     
     def finish_page
-        ParserProcess.new.delay.parse_categories_attach(@login)
+        ParserProcess.new.delay.parse_categories_attach_and_create_objects(@login)
     end
     
     private

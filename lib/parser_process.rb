@@ -6,11 +6,13 @@ class ParserProcess
         login.update_column( :categories_parsed, true )
     end
     
-    def parse_categories_attach(login)
-        Parser::ProductList.new.create_join_table_categories_products(login)
-        Parser::ProductList.new.create_product_table(login)
-        Parser::Image.new.category_image(login)
-        Parser::Login.new.login( login )
-        Parser::Image.new.product_image(login)
+    def parse_categories_attach_and_create_objects(login)
+        # Parser::ProductList.new.create_join_table_categories_products(login)
+        # Parser::ProductList.new.create_product_table(login)
+        # # Parser::Image.new.category_image(login)
+        # Parser::Login.new.login( login )
+        # Parser::Image.new.product_image(login)
+        Import::CreateCategories.new.create(login)
+        
     end
 end

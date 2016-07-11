@@ -41,7 +41,7 @@ module Parser
 																						  productId: items[0][:value]
 																						 )
 																		}.body[:call_response][:call_return][:item]
-				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level']
+				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image']
 				Parser.new_array_with_object(arrr, $column_names)
 			rescue
 				$error << items
@@ -204,7 +204,7 @@ module Parser
 																										  productId: product_id
 																										  ) }.body[:call_response][:call_return][:item]
 					Parser.new_array_with_object(arrr, $column_names)
-					object_attr_for_csv = []
+					# object_attr_for_csv = []
 					attr_hash = {}
 					arrr_keys = arrr.map{|a| a[:key]}
 					$custom_attr.map do |key|
@@ -288,7 +288,7 @@ module Parser
 						$error2 = []
 						begin
 						unless img_url.blank?
-							image_name = img_url.split("/").last
+							# image_name = img_url.split("/").last
 							# open( "public/#{login.id}/image/products/#{image_name}", 'wb') do |file|
 							# 	file << open(img_url).read
 								p "Image #{img_url} added in table for product with ID: #{product_id}!!!"
@@ -320,7 +320,7 @@ module Parser
 
 	def self.new_array_with_object(arrr, column_names)
 		$hash = {}
-		object_attr_for_csv = []
+		# object_attr_for_csv = []
 		attr_hash = {}
 		arrr_keys = arrr.map{|a| a[:key]}
 		column_names.map do |key|
