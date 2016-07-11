@@ -1,6 +1,6 @@
 class ParsingController < ApplicationController
     before_filter :set_login
-    before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
+    # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
     
     def category
         ParserProcess.new.delay.parse_categories(@login)
@@ -20,11 +20,15 @@ class ParsingController < ApplicationController
     end
     
     def category_product_join_table
+        @all_categories = []
+        SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
         @collection = Collection.new
         @shopify_collect = ShopifyAPI::CustomCollection.all
     end
     
     def accepted_collection
+        @all_categories = []
+        SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
         @all_categories.map do |category|
             cat_id = category[:category_id]
             param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
@@ -44,15 +48,10 @@ class ParsingController < ApplicationController
     end
     
     def finish_page
-        # last part of the programm heare
+        ParserProcess.new.delay.parse_categories_attach(@login)
     end
     
     private
-    
-    def activ_categories
-        @all_categories = []
-        SmarterCSV.process( "public/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
-    end
     
     def set_login
         @login = Login.find(session[:login_id])
