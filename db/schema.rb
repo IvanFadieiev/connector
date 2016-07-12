@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160708144811) do
+ActiveRecord::Schema.define(version: 20160712084713) do
 
   create_table "collections", force: :cascade do |t|
     t.integer  "shopify_category_id"
@@ -45,6 +45,7 @@ ActiveRecord::Schema.define(version: 20160708144811) do
     t.datetime "updated_at",                        null: false
     t.string   "store_url"
     t.boolean  "categories_parsed", default: false
+    t.string   "target_url"
   end
 
   create_table "shops", force: :cascade do |t|
@@ -55,5 +56,13 @@ ActiveRecord::Schema.define(version: 20160708144811) do
   end
 
   add_index "shops", ["shopify_domain"], name: "index_shops_on_shopify_domain", unique: true
+
+  create_table "target_category_imports", force: :cascade do |t|
+    t.integer  "magento_category_id"
+    t.integer  "shopify_category_id"
+    t.integer  "login_id"
+    t.datetime "created_at",          null: false
+    t.datetime "updated_at",          null: false
+  end
 
 end

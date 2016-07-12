@@ -21,7 +21,10 @@
         <%= f.password_field :key %><br />
         
         <%= f.label "Magento StoreView ID:" %><br />
-        <%= f.text_field :store_id %><br /><br />
+        <%= f.text_field :store_id %><br />
+        
+        <%= f.label "Your Shopify Shop url:" %><br />
+        <%= f.text_field :target_url %><br /><br />
       
         <%= f.submit %>
       <% end %>
