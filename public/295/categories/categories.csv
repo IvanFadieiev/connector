@@ -1,0 +1,8 @@
+category_id,parent_id,name,description,is_active,level,image
+8,2,Headwear,Keep your head warm with a nice beanie or the sun out of your eyes in a cool cap. We have a wide range of headwear in many shapes and designs for you to chose from. Our cap collection is something we prioritize highly and at TS - Top Streetwear you chose from the biggest cap brands in the business!,1,2,Kepsar-Mossor_1.png
+161,8,Caps,A cool cap is most important if you want to look fly from top to bottom. We have all kinds of caps in a wide variety of colors and sizes for you to chose from so you can count on finding a lot here you like. Our cap collection is from smaller exclusive designers to the worlds biggest and most famous cap manufacturers.,1,3,rakakepsar.png
+318,161,Snapback,"{:""@xsi:type""=>""xsd:string""}",1,4,
+357,161,Fitted,"{:""@xsi:type""=>""xsd:string""}",1,4,
+163,8,Beanies,"Beanies are not only practical when it is cold outside, they can also look great! We have a good size collection of beanies that keep you both warm and cool at the same time. So hit the slopes in style next time in one of our awsome beanies!",1,3,mossor.png
+160,8,Hats,If you want to wear something other than a cap a hat is a very cool alternative. Works well with a nice shirt and gives you a more well dressed look perfect for a party or at the club. If you haven't already - Try it!,1,3,hattar.png
+162,8,Durags,Durags is very common amongs hip hop artists around the world. They can be worn seperatly or with a cap on top for a cool classic hip hop look. We have single colored styles and a few with details or prints. Pick a color you like or one that suits your cap the best!,1,3,durags.png

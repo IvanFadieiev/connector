@@ -39,15 +39,22 @@ module Import
     end
     
     class   CreateProducts < AuthenticatedController
-        def recursive(login,id)
-            data = SmarterCSV.process("public/#{login.id}/categories/categories.csv")
-            data.map{|a| $children_categories << a if (a[:parent_id]==id)}
-            $children_categories.map do |cat|
-                id_cat = cat[:category_id]
-                recursive(login, id_cat)
+        def recursive( children_categories_1_lavel, data, category, login )
+            unless children_categories_1_lavel.blank?
+                children_categories_2_lavel = []
+                children_categories_1_lavel.map do |_1_lav_cat|
+                    data.map{|a| children_categories_2_lavel << a if (a[:parent_id]== _1_lav_cat[:category_id])}
+                end
+                
+                # создать TargetCategoryImport для каждого из $children_categories_2_lavel
+                children_categories_2_lavel.map do |children|
+                    TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
+                end
+                
+                unless children_categories_2_lavel.blank?
+                    recursive( children_categories_2_lavel, data, category, login )
+                end
             end
-            $children_categories
-            create_products(login)
         end
         
         def create_products_to_shop(login)
@@ -56,33 +63,55 @@ module Import
             
             CreateCategories.new_with(login)
             created_categories = Collection.where( login_id: login.id )
+            byebug
             created_categories.map do |category|
-                # создать товар в шопифай!!!!!!!!!!!!!!!!!!!!
-                TargetCategoryImport.create( magento_category_id: category.magento_category_id, shopify_category_id: category.shopify_category_id, login_id: login.id, )
-                # children_category_1_lavel
-                $children_categories_1_lavel = []
-                # recursive(login, category.magento_category_id)
+                TargetCategoryImport.create( magento_category_id: category.magento_category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
+                
                 data = SmarterCSV.process("public/#{login.id}/categories/categories.csv")
-                data.map{|a| $children_categories_1_lavel << a if (a[:parent_id]== category.id)}
-                # создать TargetCategoryImport для каждого из  $children_categories_1_lavel
-                # - // -
+                $children_categories_1_lavel = []
+                data.map{|a| $children_categories_1_lavel << a if (a[:parent_id]== category.magento_category_id)}
+                # создать TargetCategoryImport для каждой дочерней категории
+                $children_categories_1_lavel.map do |children|
+                    TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
+                end
+                
+                unless  $children_categories_1_lavel.blank?
                     $children_categories_2_lavel = []
-                    $children_categories_1_lavel.map do |1_lav_cat|
-                        data.map{|a| $children_categories_2_lavel << a if (a[:parent_id]== 1_lav_cat[:category_id])}
+                    $children_categories_1_lavel.map do |_1_lav_cat|
+                        data.map{|a| $children_categories_2_lavel << a if (a[:parent_id]== _1_lav_cat[:category_id])}
                     end
                     # создать TargetCategoryImport для каждого из $children_categories_2_lavel
-                    $children_categories_3_lavel = []
-                    $children_categories_2_lavel.map do |2_lav_cat|
-                        data.map{|a| $children_categories_3_lavel << a if (a[:parent_id]== 2_lav_cat[:category_id])}
+                    $children_categories_2_lavel.map do |children|
+                        TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
                     end
-                     # создать TargetCategoryImport для каждого из $children_categories_3_lavel
-                    $children_categories_4_lavel = []
-                    $children_categories_3_lavel.map do |3_lav_cat|
-                        data.map{|a| $children_categories_4_lavel << a if (a[:parent_id]== 3_lav_cat[:category_id])}
-                    end
-                     # создать TargetCategoryImport для каждого из $children_categories_4_lavel
-                byebug
+                end
                 
+                
+                unless  $children_categories_2_lavel.blank?
+                    $children_categories_3_lavel = []
+                    $children_categories_2_lavel.map do |_2_lav_cat|
+                        data.map{|a| $children_categories_3_lavel << a if (a[:parent_id]== _2_lav_cat[:category_id])}
+                    end
+                    # создать TargetCategoryImport для каждого из $children_categories_3_lavel
+                    $children_categories_3_lavel.map do |children|
+                        TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
+                    end
+                end
+                
+                
+                unless  $children_categories_3_lavel.blank?
+                    $children_categories_4_lavel = []
+                    $children_categories_3_lavel.map do |_3_lav_cat|
+                        data.map{|a| $children_categories_4_lavel << a if (a[:parent_id]== _3_lav_cat[:category_id])}
+                    end
+                    # создать TargetCategoryImport для каждого из $children_categories_4_lavel
+                    $children_categories_4_lavel.map do |children|
+                        TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
+                    end
+                end
+                
+                
+                byebug
             end
         end
         
