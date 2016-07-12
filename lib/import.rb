@@ -63,7 +63,6 @@ module Import
             
             CreateCategories.new_with(login)
             created_categories = Collection.where( login_id: login.id )
-            byebug
             created_categories.map do |category|
                 TargetCategoryImport.create( magento_category_id: category.magento_category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
                 
@@ -75,43 +74,8 @@ module Import
                     TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
                 end
                 
-                unless  $children_categories_1_lavel.blank?
-                    $children_categories_2_lavel = []
-                    $children_categories_1_lavel.map do |_1_lav_cat|
-                        data.map{|a| $children_categories_2_lavel << a if (a[:parent_id]== _1_lav_cat[:category_id])}
-                    end
-                    # создать TargetCategoryImport для каждого из $children_categories_2_lavel
-                    $children_categories_2_lavel.map do |children|
-                        TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
-                    end
-                end
+                recursive( $children_categories_1_lavel, data, category, login )
                 
-                
-                unless  $children_categories_2_lavel.blank?
-                    $children_categories_3_lavel = []
-                    $children_categories_2_lavel.map do |_2_lav_cat|
-                        data.map{|a| $children_categories_3_lavel << a if (a[:parent_id]== _2_lav_cat[:category_id])}
-                    end
-                    # создать TargetCategoryImport для каждого из $children_categories_3_lavel
-                    $children_categories_3_lavel.map do |children|
-                        TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
-                    end
-                end
-                
-                
-                unless  $children_categories_3_lavel.blank?
-                    $children_categories_4_lavel = []
-                    $children_categories_3_lavel.map do |_3_lav_cat|
-                        data.map{|a| $children_categories_4_lavel << a if (a[:parent_id]== _3_lav_cat[:category_id])}
-                    end
-                    # создать TargetCategoryImport для каждого из $children_categories_4_lavel
-                    $children_categories_4_lavel.map do |children|
-                        TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
-                    end
-                end
-                
-                
-                byebug
             end
         end
         
