@@ -3,7 +3,8 @@ class ParsingController < AuthenticatedController
     # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
     
     def category
-        ParserProcess.new.delay.parse_categories(@login)
+        # ParserProcess.new.parse_categories(@login)
+        ParsCategoryWorker.perform_async(@login.id)
         check_categories_parsing
     end
     
@@ -36,7 +37,7 @@ class ParsingController < AuthenticatedController
             unless ids.blank?
                 ids.map do |shopify_category_id|
                     param_magento = "#{cat_id}_magento_category_id".to_sym
-                    Collection.delay.create(
+                    Collection.create(
                                       shopify_category_id:  shopify_category_id,
                                       magento_category_id: params[param_magento],
                                       login_id: session[:login_id]
@@ -48,7 +49,8 @@ class ParsingController < AuthenticatedController
     end
     
     def finish_page
-        ParserProcess.new.delay.parse_categories_attach_and_create_objects(@login)
+        # ParserProcess.new.parse_categories_attach_and_create_objects(@login)
+        ParsAttachWorker.perform_async(@login.id)
     end
     
     private

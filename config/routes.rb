@@ -17,8 +17,9 @@ Rails.application.routes.draw do
   get  'check_categories_parsing',    to: 'parsing#check_categories_parsing'
   post 'accepted_collection',         to: 'parsing#accepted_collection'
   get  'finish_page',                 to: 'parsing#finish_page'
-
-  mount DelayedJobWeb => "/delayed_job"
+  
+  # mount Sidekiq::Web, at: '/sidekiq'
+  
   root :to => 'home#index'
   
   # The priority is based upon order of creation: first created -> highest priority.
