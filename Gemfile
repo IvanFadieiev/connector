@@ -51,3 +51,5 @@ gem 'savon', '~> 2.11.0'
 gem 'bootstrap-sass', '~> 3.3.6'
 gem 'nprogress-rails'
 gem 'sidekiq'
+gem 'sinatra', require: false
+gem 'slim'
