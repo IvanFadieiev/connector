@@ -191,6 +191,7 @@ module Parser
 											'url_key',
 											'image',
 											'color',
+											'status',
 											'weight',
 											'set'
 											]
@@ -200,9 +201,9 @@ module Parser
 			array_uniq_products_ids.map do |product_id|
 				begin
 					arrr = $client.call( :call ){ message( session: $session,
-																										  method: 'catalog_product.info',
-																										  productId: product_id
-																										  ) }.body[:call_response][:call_return][:item]
+														  method: 'catalog_product.info',
+														  productId: product_id
+														  ) }.body[:call_response][:call_return][:item]
 					Parser.new_array_with_object(arrr, $column_names)
 					# object_attr_for_csv = []
 					attr_hash = {}
@@ -238,9 +239,9 @@ module Parser
 
 		def info_soap_product(product_id)
 			$product = $client.call( :call ){ message( session: $session,
-																										  method: 'catalog_product.info',
-																										  productId: product_id
-																										  ) }.body[:call_response][:call_return][:item]
+													  method: 'catalog_product.info',
+													  productId: product_id
+													  ) }.body[:call_response][:call_return][:item]
 		end
 	end
 
@@ -249,10 +250,9 @@ module Parser
 			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:category_id] }.uniq
 			parsed_data.map do |category_id|
 				arrr  = $client.call(:call){ message( session: $session,
-																				 		  method: 'catalog_category.info',
-																						  productId: category_id
-																						 )
-																		}.body[:call_response][:call_return][:item]
+													 		   method: 'catalog_category.info',
+															   productId: category_id
+															  )}.body[:call_response][:call_return][:item]
 				image = []
 				arrr.map{|a| image << a[:value] if ((a[:key] == "image" ) && (a[:value] != {:"@xsi:type"=>"xsd:string"}))}
 				unless image[0].blank?
@@ -280,7 +280,7 @@ module Parser
 					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
 				else
 					unless arrr == nil
-						arrr.map{ |a| a[:item].map{ |b| images << b[:value] if ((a[:key] == "url") ) } }
+						arrr.map{ |a| a[:item].map{ |b| images << b[:value] if ((b[:key] == "url") ) } }
 					end
 				end
 				if images.any?
