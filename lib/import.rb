@@ -8,16 +8,17 @@ module Import
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )
             if categories_for_creating.any?
                 categories_for_creating.map do |category|
-                    data = SmarterCSV.process("public/#{login.id}/categories/categories.csv")
+                    # data = SmarterCSV.process("public/#{login.id}/categories/categories.csv")
+                    data = Category.where(login_id: login.id)
                     find_category = []
-                    data.map{ |a| find_category << a if ( a[:category_id] == category.magento_category_id ) }
+                    data.map{ |a| find_category << a if ( a.category_id == category.magento_category_id ) }
                     title = find_category[0][:name]
                     unless find_category[0][:description].class == Hash 
-                        body_html = find_category[0][:description]
+                        body_html = find_category[0].description
                     else
                         body_html = nil
                     end
-                    src = find_category[0][:image]
+                    src = find_category[0].image
                     
                     categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     categ.save
@@ -40,12 +41,12 @@ module Import
             unless children_categories_1_lavel.blank?
                 children_categories_2_lavel = []
                 children_categories_1_lavel.map do |_1_lav_cat|
-                    data.map{|a| children_categories_2_lavel << a if (a[:parent_id]== _1_lav_cat[:category_id])}
+                    data.map{|a| children_categories_2_lavel << a if (a.parent_id == _1_lav_cat.category_id)}
                 end
                 
                 # создать TargetCategoryImport для каждого из $children_categories_2_lavel
                 children_categories_2_lavel.map do |children|
-                    TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
+                    TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
                 end
                 
                 unless children_categories_2_lavel.blank?
@@ -63,12 +64,13 @@ module Import
             created_categories.map do |category|
                 TargetCategoryImport.create( magento_category_id: category.magento_category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
                 
-                data = SmarterCSV.process("public/#{login.id}/categories/categories.csv")
+                # data = SmarterCSV.process("public/#{login.id}/categories/categories.csv")
+                data = Category.where(login_id: login.id)
                 $children_categories_1_lavel = []
-                data.map{|a| $children_categories_1_lavel << a if (a[:parent_id]== category.magento_category_id)}
+                data.map{|a| $children_categories_1_lavel << a if (a.parent_id == category.magento_category_id)}
                 # создать TargetCategoryImport для каждой дочерней категории
                 $children_categories_1_lavel.map do |children|
-                    TargetCategoryImport.create( magento_category_id: children[:category_id], shopify_category_id: category.shopify_category_id, login_id: login.id )
+                    TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
                 end
                 
                 recursive( $children_categories_1_lavel, data, category, login )
@@ -78,38 +80,41 @@ module Import
         end
         
         def create_products(login)
-            # login = Login.find(259)
-            data         = SmarterCSV.process("public/#{login.id}/categories_products/join_table_categories_products.csv")
-            all_products = SmarterCSV.process("public/#{login.id}/products/products_table.csv")
-            images       = SmarterCSV.process("public/#{login.id}/image/products/join_table_products_images_table.csv")
+            # data         = SmarterCSV.process("public/#{login.id}/categories_products/join_table_categories_products.csv")
+            # all_products = SmarterCSV.process("public/#{login.id}/products/products_table.csv")
+            # images       = SmarterCSV.process("public/#{login.id}/image/products/join_table_products_images_table.csv")
+            data         = JoinTableCategoriesProduct.where(login_id: login.id).uniq
+            all_products = Product.where(login_id: login.id, status: "1").uniq
+            images       = ProductImage.where(login_id: login.id).uniq
             TargetCategoryImport.where(login_id: login.id).map do |cat|
                 $prod_object_for_cat = []
                 prod_ids_for_category = []
                 magento_id = cat.magento_category_id
                 # shopify_id = cat.shopify_category_id
                 data.map do |line|
-                    prod_ids_for_category << line if ( line[:category_id] == magento_id )
+                    prod_ids_for_category << line if ( line.category_id == magento_id )
                 end
                 prod_ids_for_category.map do |prod|
                     all_products.map do |line_prod|
-                        $prod_object_for_cat << line_prod if (line_prod[:product_id] == prod[:products_id])
+                        $prod_object_for_cat << line_prod if (line_prod.product_id == prod.product_id)
                     end
                 end
                 $prod_object_for_cat.map do |product_line|
                     
-                    title     = product_line[:name]
-                    unless product_line[:description].class == Hash
-                        body_html = product_line[:description]
+                    title     = product_line.name
+                    unless product_line.description.class == Hash
+                        body_html = product_line.description
                     else
                         body_html = ""
                     end
-                    handle = product_line[:url_key]
-                    sku    = product_line[:sku]
-                    unless (product_line[:price] == nil)
-                        price  = product_line[:price]
+                    handle = product_line.url_key
+                    sku    = product_line.sku
+                    unless (product_line.price == nil)
+                        price  = product_line.price
                     else
                         price = 0
                     end
+                    status = product_line.status
                     
                     product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
                     
@@ -120,11 +125,11 @@ module Import
                     
                     images_for_product = []
                     images.map do |img|
-                       images_for_product << img if (img[:product_id] == product_line[:product_id]) 
+                       images_for_product << img if (img.product_id == product_line.product_id) 
                     end
                     images_for_product.map do |image_line|
                         begin
-                            src = image_line[:image_url]
+                            src = image_line.image_url
                             ip.images << { 'src': src }
                             ip.save
                         rescue
