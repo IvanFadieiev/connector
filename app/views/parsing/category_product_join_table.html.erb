@@ -1,7 +1,7 @@
 <div class="container">
     <div class="row">
         <div class= "col-md-6 col-md-offset-3">
-            <% unless @all_categories.blank? %>
+            <%# unless @all_categories.blank? %>
                 <h1>Press ctrl for miltiple choice of the categories, where you want to import products:</h1><br>
                 <%= form_for @collection, url: accepted_collection_url, html: { method: :post} do |f| %>
                     <% @all_categories.each do |category| %>
@@ -11,10 +11,10 @@
                     <% end %>
                     <%= f.submit "Accept" %>
                 <% end %>
-            <% else %>
+            <%# else %>
                 <h1>This StoreView does not have activ category!</h1>
                 <%= link_to "Try again", root_path %>
-            <% end %>
+            <%# end %>
         </div>
     </div>
 </div>

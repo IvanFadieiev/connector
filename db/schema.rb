@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160714111407) do
+ActiveRecord::Schema.define(version: 20160714162953) do
 
   create_table "categories", force: :cascade do |t|
     t.integer  "category_id"
@@ -67,6 +67,37 @@ ActiveRecord::Schema.define(version: 20160714111407) do
     t.string   "store_url"
     t.boolean  "categories_parsed", default: false
     t.string   "target_url"
+  end
+
+  create_table "product_images", force: :cascade do |t|
+    t.integer  "product_id"
+    t.string   "img_url"
+    t.integer  "login_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.integer  "product_id"
+    t.string   "prod_type"
+    t.string   "sku"
+    t.string   "name"
+    t.string   "ean"
+    t.text     "description"
+    t.string   "price"
+    t.string   "special_price"
+    t.string   "special_from_date"
+    t.string   "special_to_date"
+    t.string   "url_key"
+    t.string   "image"
+    t.string   "color"
+    t.string   "status"
+    t.string   "weight"
+    t.string   "set"
+    t.string   "size"
+    t.integer  "login_id"
+    t.datetime "created_at",        null: false
+    t.datetime "updated_at",        null: false
   end
 
   create_table "shops", force: :cascade do |t|

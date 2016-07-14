@@ -166,7 +166,8 @@ module Parser
 
 		def create_product_table(login)
 			$error_with_creating_product_table = []
-			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }
+			# parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }
+			parsed_data = JoinTableCategoriesProduct.where(login_id: login.id).map{ |a| a.product_id }
 			array_uniq_products_ids = parsed_data.uniq
 			$custom_attr = [
 											'modelsize',
@@ -230,15 +231,20 @@ module Parser
 					$products_with_errors << $hash
 				end
 			end
-
-			hashes = $all_products
-			s = CSV.generate do |csv|
-			  csv << ($column_names + ['size'])
-			  hashes.each do |x|
-			    csv << x.values
-			  end
+			
+			$all_products.map do |prod|
+				p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:ean], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
+				p "Product with ID: #{p.id}  added to the table"
 			end
-			File.write("public/#{login.id}/products/products_table.csv", s)
+			$all_products = []
+			# hashes = $all_products
+			# s = CSV.generate do |csv|
+			#   csv << ($column_names + ['size'])
+			#   hashes.each do |x|
+			#     csv << x.values
+			#   end
+			# end
+			# File.write("public/#{login.id}/products/products_table.csv", s)
 		end
 
 		def info_soap_product(product_id)
@@ -272,7 +278,8 @@ module Parser
 
 		def product_image(login)
 			$all_prod_imgs = []
-			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }.uniq
+			# parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:products_id] }.uniq
+			parsed_data = JoinTableCategoriesProduct.where(login_id: login.id).map{ |a| a.product_id }.uniq
 			parsed_data.map do |product_id|
 				arrr = $client.call(:call){ message( session:   $session,
 												     method:    'catalog_product_attribute_media.list',
@@ -284,7 +291,11 @@ module Parser
 					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
 				else
 					unless arrr == nil
-						arrr.map{ |a| a[:item].map{ |b| images << b[:value] if ((b[:key] == "url") ) } }
+						arrr.map do |a| 
+							a[:item].map do |b|
+								images << b[:value] if ((b[:key] == "url") )
+							end
+						end
 					end
 				end
 				if images.any?
@@ -295,9 +306,11 @@ module Parser
 							# image_name = img_url.split("/").last
 							# open( "public/#{login.id}/image/products/#{image_name}", 'wb') do |file|
 							# 	file << open(img_url).read
-								p "Image #{img_url} added in table for product with ID: #{product_id}!!!"
-								obj_scv = {'product_id' => product_id, 'image_url' => img_url}
-								$all_prod_imgs << obj_scv
+								# p "Image #{img_url} added in table for product with ID: #{product_id}!!!"
+								i = ProductImage.create(product_id: product_id, img_url: img_url, login_id: login.id )
+								p "Image for Product add to table #{i.img_url}"
+								# obj_scv = {'product_id' => product_id, 'image_url' => img_url}
+								# $all_prod_imgs << obj_scv
 							# end
 						else
 							p "Product with ID: #{product_id} havn`t image"
@@ -311,14 +324,14 @@ module Parser
 				end
 			end
 	
-			hashes = $all_prod_imgs
-			s = CSV.generate do |csv|
-			  csv << ["product_id", "image_url"]
-			  hashes.each do |x|
-			    csv << x.values
-			  end
-			end
-			File.write("public/#{login.id}/image/products/join_table_products_images_table.csv", s)
+			# hashes = $all_prod_imgs
+			# s = CSV.generate do |csv|
+			#   csv << ["product_id", "image_url"]
+			#   hashes.each do |x|
+			#     csv << x.values
+			#   end
+			# end
+			# File.write("public/#{login.id}/image/products/join_table_products_images_table.csv", s)
 		end
 	end
 
@@ -338,9 +351,14 @@ module Parser
 				attr_hash.merge!(key.to_sym => nil)
 			end
 		end
-		cat_to_p = Category.create(category_id: attr_hash[:category_id], parent_id: attr_hash[:parent_id], name: attr_hash[:name], description: attr_hash[:description], is_active: attr_hash[:is_active].to_i, level: attr_hash[:level].to_i, image: attr_hash[:image], login_id: login.id)
-		p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
-		# $hash.merge!(attr_hash)
+		if attr_hash.keys.include?(:category_id) && attr_hash.keys.include?(:parent_id)
+			cat_to_p = Category.create(category_id: attr_hash[:category_id], parent_id: attr_hash[:parent_id], name: attr_hash[:name], description: attr_hash[:description], is_active: attr_hash[:is_active].to_i, level: attr_hash[:level].to_i, image: attr_hash[:image], login_id: login.id)
+			p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
+		# else
+		# 	p = Product.create(product_id: attr_hash[:product_id], prod_type: attr_hash[:type], sku: attr_hash[:sku], name: attr_hash[:ean], ean: attr_hash[:ean], description: attr_hash[:description], price: attr_hash[:price], special_price: attr_hash[:special_price], special_from_date: attr_hash[:special_from_date], special_to_date: attr_hash[:special_to_date], url_key: attr_hash[:url_key], image: attr_hash[:image], color: attr_hash[:color], status: attr_hash[:status], weight: attr_hash[:weight], set: attr_hash[:set], size: attr_hash[:size], login_id: login.id)
+		# 	p "Product with ID: #{p.id}  added to the table"
+		end
+		$hash.merge!(attr_hash)
 	end
 end
 
