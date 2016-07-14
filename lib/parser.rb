@@ -139,7 +139,7 @@ module Parser
 					    prod_id = product[:item][0][:value]
 					    # csv << [id, prod_id]
 					    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id)
-					    p "Add category ID: #{ id }, product ID: #{ prod_id }"
+					    p "Add category ID: #{ id }, product ID: #{ prod_id } login #{login.id}"
 						end
 					end
 				rescue
@@ -151,8 +151,8 @@ module Parser
 		def create_join_table_categories_products(login)
 			$array_cat = []
 			# Parser::Login.new.login( 'http://tsw-admin.icommerce.se/api/?wsdl', "developer", "zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde", 5 )
-				s = CSV.generate do |csv|
-					csv << [ "category_id", "products_id" ]
+				# s = CSV.generate do |csv|
+				# 	csv << [ "category_id", "products_id" ]
 					# $parsed_data = SmarterCSV.process( "public/#{login.id}/categories/categories.csv" ).map do |cat|
 					$parsed_data = Category.where(login_id: login.id).map do |cat|
 						id = cat.category_id
@@ -160,8 +160,8 @@ module Parser
 						Parser::ProductList.new.category_products( id )
 						Parser::ProductList.new.check_nil( $products_to_category, id, login )
 					end
-				end
-			File.write( "public/#{login.id}/categories_products/join_table_categories_products.csv", s )
+				# end
+			# File.write( "public/#{login.id}/categories_products/join_table_categories_products.csv", s )
 		end
 
 		def create_product_table(login)
