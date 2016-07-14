@@ -21,8 +21,8 @@ class ParsingController < AuthenticatedController
     end
     
     def category_product_join_table
-        @all_categories = []
-        SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
+        @all_categories = Category.where('level == 2 and is_active == 1 and login_id == ?', @login.id)
+        # SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
         @collection = Collection.new
         @shopify_collect = ShopifyAPI::CustomCollection.all
     end

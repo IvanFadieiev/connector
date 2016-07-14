@@ -27,14 +27,14 @@ module Parser
 
 		def main_category(login)
 			$items				 = categories(login).body[:call_response][:call_return][:item]
-			$all_categories 	 = []
+			# $all_categories 	 = []
 			$error 				 = []
 			$error_key_params 	 = []
 			$error_key_recursive = []
-			hash_params($items)
+			hash_params($items, login)
 		end
 
-		def hash_params(items)
+		def hash_params(items, login)
 			begin
 				arrr  = $client.call(:call){ message( session: $session,
 																				 		  method: 'catalog_category.info',
@@ -42,25 +42,26 @@ module Parser
 																						 )
 																		}.body[:call_response][:call_return][:item]
 				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image']
-				Parser.new_array_with_object(arrr, $column_names)
+				Parser.new_array_with_object(arrr, $column_names, login)
 			rescue
 				$error << items
+				puts "------------------------------ERROR-------------------------------------"
 				puts "Category with ID = #{ items[0][:value] } add to the list!!!"
-				puts "-------------------------------------------------------------------"
+				puts "------------------------------ERROR-------------------------------------"
 			end
-			$all_categories << $hash
-			p "Category with id #{ $hash.first[1] } added to the CATEGORY TABLE!!!"
-			p "-------------------------------------------------------------------"
+			# $all_categories << $hash
+			# p "Category with id #{ $hash.first[1] } added to the CATEGORY TABLE!!!"
+			# p "-------------------------------------------------------------------"
 			begin
 				if ( (items[6].class == Hash) && items[6][:value].keys.include?( :item ) ) || ( items[6].class == Array )
-					recursive(items[6])
+					recursive(items[6], login)
 				end
 			rescue
 				$error_key_params << item
 			end
 		end
 
-		def recursive( request )
+		def recursive( request, login )
 			( request.class == Array )
 			if request.class == Hash
 				begin
@@ -70,10 +71,10 @@ module Parser
 						a = request[:item]
 					end
 					if ( a.count == 7 ) && ( a[1][:key] == "parent_id" )
-						hash_params( a )
+						hash_params( a , login)
 					else
 						a.map do |children|
-							recursive( children )
+							recursive( children, login )
 						end
 					end
 				rescue
@@ -82,13 +83,13 @@ module Parser
 			elsif request.class == Array
 				if filter_conditions( request )
 					request.map do |a|
-						hash_params( a )
+						hash_params( a, login )
 					end
 				elsif ( request.count == 7 ) && ( request[1][:key] == "parent_id" )
-					hash_params(request)
+					hash_params(request, login)
 				else
 					request.map do |children|
-						recursive( children )
+						recursive( children, login )
 					end
 				end
 			end
@@ -103,15 +104,15 @@ module Parser
 
 		def create_categories_table(login)
 			Parser::CategoryList.new.main_category(login)
-			hashes = $all_categories
-			# $column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image' ]
-			s = CSV.generate do |csv|
-			  csv << $column_names
-			  hashes.each do |x|
-			    csv << x.values
-			  end
-			end
-			File.write("public/#{login.id}/categories/categories.csv", s)
+			# hashes = $all_categories
+			# # $column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image' ]
+			# s = CSV.generate do |csv|
+			#   csv << $column_names
+			#   hashes.each do |x|
+			#     csv << x.values
+			#   end
+			# end
+			# File.write("public/#{login.id}/categories/categories.csv", s)
 			p "categories is parsed"
 		end
 	end
@@ -204,7 +205,7 @@ module Parser
 														  method: 'catalog_product.info',
 														  productId: product_id
 														  ) }.body[:call_response][:call_return][:item]
-					Parser.new_array_with_object(arrr, $column_names)
+					Parser.new_array_with_object(arrr, $column_names, login)
 					# object_attr_for_csv = []
 					attr_hash = {}
 					arrr_keys = arrr.map{|a| a[:key]}
@@ -318,7 +319,7 @@ module Parser
 		end
 	end
 
-	def self.new_array_with_object(arrr, column_names)
+	def self.new_array_with_object(arrr, column_names, login)
 		$hash = {}
 		# object_attr_for_csv = []
 		attr_hash = {}
@@ -334,7 +335,9 @@ module Parser
 				attr_hash.merge!(key.to_sym => nil)
 			end
 		end
-		$hash.merge!(attr_hash)
+		cat_to_p = Category.create(category_id: attr_hash[:category_id], parent_id: attr_hash[:parent_id], name: attr_hash[:name], description: attr_hash[:description], is_active: attr_hash[:is_active].to_i, level: attr_hash[:level].to_i, image: attr_hash[:image], login_id: login.id)
+		p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
+		# $hash.merge!(attr_hash)
 	end
 end
 
