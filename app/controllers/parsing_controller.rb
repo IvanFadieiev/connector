@@ -28,10 +28,10 @@ class ParsingController < AuthenticatedController
     end
     
     def accepted_collection
-        @all_categories = []
-        SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
+        @all_categories = Category.where('level == 2 and is_active == 1 and login_id == ?', @login.id)
+        # SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
         @all_categories.map do |category|
-            cat_id = category[:category_id]
+            cat_id = category.category_id
             param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
             ids = params[param_shopify]
             unless ids.blank?
@@ -40,7 +40,7 @@ class ParsingController < AuthenticatedController
                     Collection.create(
                                       shopify_category_id:  shopify_category_id,
                                       magento_category_id: params[param_magento],
-                                      login_id: session[:login_id]
+                                      login_id: @login.id
                                       )
                 end
             end

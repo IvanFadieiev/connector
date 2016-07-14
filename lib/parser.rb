@@ -126,22 +126,24 @@ module Parser
 												}.body[:call_response][:call_return][:item]
 		end
 
-		def check_nil( products_to_category, id, csv )
+		def check_nil( products_to_category, id, login )
 			unless $products_to_category == nil
 				begin
 					if ( products_to_category.class == Hash ) && products_to_category.include?( :item )
 				    prod_id = products_to_category[:item][0][:value]
-				    csv << [id, prod_id]
+				    # csv << [id, prod_id]
+				    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id )
 				    p "Add category ID: #{ id }, product ID: #{ prod_id }"
 					else
 						products_to_category.map do |product|
 					    prod_id = product[:item][0][:value]
-					    csv << [id, prod_id]
+					    # csv << [id, prod_id]
+					    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id)
 					    p "Add category ID: #{ id }, product ID: #{ prod_id }"
 						end
 					end
 				rescue
-					$array_cat << products_to_category
+					# $array_cat << products_to_category
 				end
 			end
 		end
@@ -151,11 +153,12 @@ module Parser
 			# Parser::Login.new.login( 'http://tsw-admin.icommerce.se/api/?wsdl', "developer", "zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde", 5 )
 				s = CSV.generate do |csv|
 					csv << [ "category_id", "products_id" ]
-					$parsed_data = SmarterCSV.process( "public/#{login.id}/categories/categories.csv" ).map do |cat|
-						id = cat[:category_id]
+					# $parsed_data = SmarterCSV.process( "public/#{login.id}/categories/categories.csv" ).map do |cat|
+					$parsed_data = Category.where(login_id: login.id).map do |cat|
+						id = cat.category_id
 						p "Parsed category #{ id }"
 						Parser::ProductList.new.category_products( id )
-						Parser::ProductList.new.check_nil( $products_to_category, id, csv )
+						Parser::ProductList.new.check_nil( $products_to_category, id, login )
 					end
 				end
 			File.write( "public/#{login.id}/categories_products/join_table_categories_products.csv", s )

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160713163323) do
+ActiveRecord::Schema.define(version: 20160714111407) do
 
   create_table "categories", force: :cascade do |t|
     t.integer  "category_id"
@@ -49,6 +49,14 @@ ActiveRecord::Schema.define(version: 20160713163323) do
   end
 
   add_index "delayed_jobs", ["priority", "run_at"], name: "delayed_jobs_priority"
+
+  create_table "join_table_categories_products", force: :cascade do |t|
+    t.integer  "category_id"
+    t.integer  "product_id"
+    t.integer  "login_id"
+    t.datetime "created_at",  null: false
+    t.datetime "updated_at",  null: false
+  end
 
   create_table "logins", force: :cascade do |t|
     t.string   "username"
