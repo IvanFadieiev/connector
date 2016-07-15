@@ -7,9 +7,12 @@ class LoginController < ApplicationController
     def create
         @login = Login.new(login_params)
         if @login.save
-            create_dirs(@login.id)
+            # create_dirs(@login.id)
             session[:login_id] = @login.id
             savon_login(@login)
+        else
+            flash.now[:notice] = "Sorry! Try again!"
+            render "home/index"
         end
     end
     
@@ -40,6 +43,6 @@ class LoginController < ApplicationController
     end
     
     def login_params
-        params.require(:login).permit(:username, :key, :store_id,:store_url, :target_url )
+        params.require(:login).permit(:username, :key, :store_id,:store_url, :target_url, :email )
     end
 end

@@ -8,6 +8,7 @@ Bundler.require(*Rails.groups)
 
 module Workspace
   class Application < Rails::Application
+    config.assets.precompile << 'delayed/web/application.css'
     config.action_dispatch.default_headers['P3P'] = 'CP="Not used"'
     config.action_dispatch.default_headers.delete('X-Frame-Options')
     # Settings in config/environments/* take precedence over those specified here.
@@ -24,7 +25,7 @@ module Workspace
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     config.active_record.raise_in_transactional_callbacks = true
-    # config.active_job.queue_adapter = :sidekiq
+    # config.active_job.queue_adapter = :delayed_job
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
   end
 end

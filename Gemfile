@@ -53,3 +53,7 @@ gem 'nprogress-rails'
 gem 'sidekiq'
 gem 'sinatra', require: false
 gem 'slim'
+# gem 'delayed_job_active_record'
+# gem 'delayed-web'
+gem 'simple_form'
+# gem 'pg'

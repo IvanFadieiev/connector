@@ -3,7 +3,8 @@ class ParsingController < AuthenticatedController
     # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
     
     def category
-        # ParserProcess.new.parse_categories(@login)
+        
+        # ParserProcess.new.delay.parse_categories(@login)
         ParsCategoryWorker.perform_async(@login.id)
         check_categories_parsing
     end
@@ -22,14 +23,12 @@ class ParsingController < AuthenticatedController
     
     def category_product_join_table
         @all_categories = Category.where('level == 2 and is_active == 1 and login_id == ?', @login.id)
-        # SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
         @collection = Collection.new
         @shopify_collect = ShopifyAPI::CustomCollection.all
     end
     
     def accepted_collection
         @all_categories = Category.where('level == 2 and is_active == 1 and login_id == ?', @login.id)
-        # SmarterCSV.process( "public/#{@login.id}/categories/categories.csv" ).map{ |a| @all_categories << a if (a[:level]==2 && a[:is_active] == 1) }
         @all_categories.map do |category|
             cat_id = category.category_id
             param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
@@ -49,7 +48,7 @@ class ParsingController < AuthenticatedController
     end
     
     def finish_page
-        # ParserProcess.new.parse_categories_attach_and_create_objects(@login)
+        # ParserProcess.new.delay.parse_categories_attach_and_create_objects(@login)
         ParsAttachWorker.perform_async(@login.id)
     end
     
@@ -57,5 +56,6 @@ class ParsingController < AuthenticatedController
     
     def set_login
         @login = Login.find(session[:login_id])
+        # @login = Login.find(451)
     end
 end

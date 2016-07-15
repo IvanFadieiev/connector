@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  # mount Delayed::Web::Engine, at: '/jobs'
   require 'sidekiq/web'
   
   controller :sessions do
@@ -20,7 +21,7 @@ Rails.application.routes.draw do
   get  'finish_page',                 to: 'parsing#finish_page'
 
   mount Sidekiq::Web, at: '/sidekiq'
-  
+
   root :to => 'home#index'
   
   # The priority is based upon order of creation: first created -> highest priority.

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160714162953) do
+ActiveRecord::Schema.define(version: 20160715180310) do
 
   create_table "categories", force: :cascade do |t|
     t.integer  "category_id"
@@ -67,6 +67,7 @@ ActiveRecord::Schema.define(version: 20160714162953) do
     t.string   "store_url"
     t.boolean  "categories_parsed", default: false
     t.string   "target_url"
+    t.string   "email"
   end
 
   create_table "product_images", force: :cascade do |t|
@@ -96,8 +97,9 @@ ActiveRecord::Schema.define(version: 20160714162953) do
     t.string   "set"
     t.string   "size"
     t.integer  "login_id"
-    t.datetime "created_at",        null: false
-    t.datetime "updated_at",        null: false
+    t.datetime "created_at",                   null: false
+    t.datetime "updated_at",                   null: false
+    t.integer  "shopify_product_id", limit: 8
   end
 
   create_table "shops", force: :cascade do |t|
