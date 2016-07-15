@@ -233,7 +233,7 @@ module Parser
 			end
 			
 			$all_products.map do |prod|
-				p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:ean], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
+				p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
 				p "Product with ID: #{p.id}  added to the table"
 			end
 			$all_products = []
@@ -306,11 +306,16 @@ module Parser
 							# image_name = img_url.split("/").last
 							# open( "public/#{login.id}/image/products/#{image_name}", 'wb') do |file|
 							# 	file << open(img_url).read
-								# p "Image #{img_url} added in table for product with ID: #{product_id}!!!"
-								i = ProductImage.create(product_id: product_id, img_url: img_url, login_id: login.id )
-								p "Image for Product add to table #{i.img_url}"
-								# obj_scv = {'product_id' => product_id, 'image_url' => img_url}
-								# $all_prod_imgs << obj_scv
+								begin
+									open(img_url)
+									# p "Image #{img_url} added in table for product with ID: #{product_id}!!!"
+									i = ProductImage.create(product_id: product_id, img_url: img_url, login_id: login.id )
+									p "Image for Product add to table #{i.img_url}"
+									# obj_scv = {'product_id' => product_id, 'image_url' => img_url}
+									# $all_prod_imgs << obj_scv
+								rescue
+								 p 'don`t valid uri'	
+								end
 							# end
 						else
 							p "Product with ID: #{product_id} havn`t image"

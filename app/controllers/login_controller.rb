@@ -23,12 +23,13 @@ class LoginController < ApplicationController
     
     def create_dirs(id)
         dirs = []
-        dirs << File.dirname("#{Rails.root}/public/#{id}/categories/categories.log")
-        dirs << File.dirname("#{Rails.root}/public/#{id}/categories_products/categories_products.log")
-        dirs << File.dirname("#{Rails.root}/public/#{id}/image/image.log")
-        dirs << File.dirname("#{Rails.root}/public/#{id}/image/category/image.log")
-        dirs << File.dirname("#{Rails.root}/public/#{id}/image/products/image.log")
-        dirs << File.dirname("#{Rails.root}/public/#{id}/products/products.log")
+        dirs << File.dirname("#{Rails.root}/public/#{id}
+        # /categories/categories.log")
+        # dirs << File.dirname("#{Rails.root}/public/#{id}/categories_products/categories_products.log")
+        # dirs << File.dirname("#{Rails.root}/public/#{id}/image/image.log")
+        # dirs << File.dirname("#{Rails.root}/public/#{id}/image/category/image.log")
+        # dirs << File.dirname("#{Rails.root}/public/#{id}/image/products/image.log")
+        # dirs << File.dirname("#{Rails.root}/public/#{id}/products/products.log")
         dirs.map do |dir|
           FileUtils.mkdir_p(dir) unless File.directory?(dir)
         end
