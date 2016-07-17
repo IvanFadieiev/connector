@@ -89,7 +89,8 @@ module Import
                         price = 0
                     end
                     barcode = product.ean
-                    status = product.status
+                    status  = product.status
+                    weight  = product.weight
                     
                     if status == "1"
                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
@@ -99,7 +100,7 @@ module Import
                     shop_product.save
                     id = shop_product.id
                     p  "ADD PRODUCT: #{id}"
-                    Product.find(product.id).update_column(:shopify_product_id, id)
+                    # Product.find(product.id).update_column(:shopify_product_id, id)
                     ip = ShopifyAPI::Product.find(id)
                     images_for_product = product.images
                     unless images_for_product.blank?
@@ -113,12 +114,13 @@ module Import
                             end
                         end
                     end
-                    ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode )
+                    ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight )
                     product.magento_categories.group(:category_id).distinct.map do |cat|
                         shop_cat = cat.target_category_import.shopify_category_id
                         ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
                         p "#{id} add to cat: #{shop_cat}"
                     end
+                    product.update_column(:shopify_product_id, id)
                 end
             end
         end

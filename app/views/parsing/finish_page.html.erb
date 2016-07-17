@@ -1,8 +1,11 @@
 <div class="container">
     <div class="row">
         <div class= "col-md-6 col-md-offset-3">
-           <h1>Within a few hours you will receive an email about the successful import of products!</h1>
+            <% unless @login.email.blank? %>
+               <h1>After a few hours you will get a letter about a successful import!</h1>
+            <% else %>
+                <h1>Import will be finished in a few hours!</h1>
+            <% end %>
         </div>
     </div>
 </div>
-<br>
