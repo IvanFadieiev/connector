@@ -22,13 +22,13 @@ class ParsingController < AuthenticatedController
     end
     
     def category_product_join_table
-        @all_categories = Category.where('level == 2 and is_active == 1 and login_id == ?', @login.id)
+        @all_categories = Category.where(level: 2, is_active: 1, login_id: @login.id)
         @collection = Collection.new
         @shopify_collect = ShopifyAPI::CustomCollection.all
     end
     
     def accepted_collection
-        @all_categories = Category.where('level == 2 and is_active == 1 and login_id == ?', @login.id)
+        @all_categories = Category.where(level: 2, is_active: 1, login_id: @login.id)
         @all_categories.map do |category|
             cat_id = category.category_id
             param_shopify = "#{cat_id}_shopify_categories_ids".to_sym

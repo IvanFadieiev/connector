@@ -9,7 +9,7 @@ module Import
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )
             if categories_for_creating.any?
                 categories_for_creating.map do |category|
-                    find_category = Category.where("login_id == ? and category_id == ? ", login.id, category.magento_category_id)
+                    find_category = Category.where("login_id LIKE ? AND category_id LIKE ? ", login.id, category.magento_category_id)
                     title = find_category[0][:name]
                     unless find_category[0][:description].include?("{")
                         body_html = find_category[0].description
@@ -58,7 +58,7 @@ module Import
             created_categories = Collection.where( login_id: login.id ).distinct
             created_categories.map do |category|
                 TargetCategoryImport.create( magento_category_id: category.magento_category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
-                $children_categories_1_lavel = Category.where('login_id == ? and parent_id == ?', login.id, category.magento_category_id )
+                $children_categories_1_lavel = Category.where(login_id: login.id, parent_id: category.magento_category_id )
                 data = $children_categories_1_lavel
                 # создать TargetCategoryImport для каждой дочерней категории
                 $children_categories_1_lavel.map do |children|
@@ -73,8 +73,8 @@ module Import
         
         def create_products(login)
             $error_prod = []
-            Product.includes(:images, :magento_categories).where(login_id: login.id).group(:name).distinct.each do |product|
-                if product.status == "1"
+            Product.includes(:images, :magento_categories).where(login_id: login.id).uniq.map do |product|
+                if product.shopify_product_id.blank?
                     title     = product.name
                     unless product.description.include?("{:\"@xsi:type\"")
                         body_html = product.description
@@ -88,9 +88,14 @@ module Import
                     else
                         price = 0
                     end
-                    # status = product.status
+                    barcode = product.ean
+                    status = product.status
                     
-                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                    if status == "1"
+                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                    else
+                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                    end
                     shop_product.save
                     id = shop_product.id
                     p  "ADD PRODUCT: #{id}"
@@ -108,11 +113,11 @@ module Import
                             end
                         end
                     end
-                    ip.variants.first.update_attributes('sku': sku)
-                    ip.variants.first.update_attributes('price': price)
-                    product.magento_categories.group(:category_id,:product_id).distinct.each do |cat|
+                    ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode )
+                    product.magento_categories.group(:category_id).distinct.map do |cat|
                         shop_cat = cat.target_category_import.shopify_category_id
                         ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                        p "#{id} add to cat: #{shop_cat}"
                     end
                 end
             end
