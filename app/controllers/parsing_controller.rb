@@ -44,7 +44,8 @@ class ParsingController < AuthenticatedController
                 cat_id = category.category_id
                 param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
                 ids = params[param_shopify]
-                unless ids.blank?
+                # #include?("-1") - флаг который показывает, что категорию скипаем
+                unless ids.blank? || ids.include?("-1")
                     ids.map do |shopify_category_id|
                         param_magento = "#{cat_id}_magento_category_id".to_sym
                         Collection.create(

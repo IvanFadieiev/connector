@@ -137,8 +137,9 @@ module Parser
 
 		def create_join_table_categories_products(login)
 			$array_cat = []
-			$parsed_data = Category.where(login_id: login.id).map do |cat|
-				id = cat.category_id
+			# $parsed_data = Category.where(login_id: login.id).map do |cat|
+			$parsed_data = Collection.where( login_id: login.id).each do |cat|
+				id = cat.magento_category_id
 				p "Parsed category #{ id }"
 				Parser::ProductList.new.category_products( id )
 				Parser::ProductList.new.check_nil( $products_to_category, id, login )
