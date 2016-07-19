@@ -3,7 +3,7 @@ module Import
         extend ShopSession
         def create(login)
             #
-            # Выгребаем категорию втрого левела и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который 
+            # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который 
             #
             CreateCategories.new_with(login)
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )

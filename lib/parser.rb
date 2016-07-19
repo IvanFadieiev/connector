@@ -22,6 +22,7 @@ module Parser
 	class CategoryList
 		def categories(login)
 			# Parser::Login.new.login( url, username, key, storeView )
+			# $response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
 			$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
 		end
 
