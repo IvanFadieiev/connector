@@ -106,12 +106,16 @@ module Parser
 	end
 
 	class ProductList
-		def category_products( id )
-			$products_to_category = $client.call(:call){ message( session: $session,
-																  method: 'catalog_category.assignedProducts',
-																  categoryId: id
-																  )
-												}.body[:call_response][:call_return][:item]
+		def category_products( id, login )
+			begin
+				$products_to_category = $client.call(:call){ message( session: $session,
+																	  method: 'catalog_category.assignedProducts',
+																	  categoryId: id
+																	  )
+													}.body[:call_response][:call_return][:item]
+			rescue
+				Parser::Login.new.login(login)
+			end
 		end
 
 		def check_nil( products_to_category, id, login )
@@ -148,7 +152,7 @@ module Parser
 			$array_cat = []
 			Parser::ProductList.new.array_of_categories_tree(login).flatten.each do |cat_id|
 				p "Parsed category #{ cat_id }"
-				Parser::ProductList.new.category_products( cat_id )
+				Parser::ProductList.new.category_products( cat_id, login )
 				Parser::ProductList.new.check_nil( $products_to_category, cat_id, login )
 			end
 		end
@@ -173,7 +177,19 @@ module Parser
 					end
 				end
 			end
-			@all_trees
+			skiped = Collection.where( shopify_category_id: -1, login_id: login.id ).map( &:magento_category_id )
+			unless skiped.blank?
+				skiped.map do |rej|
+					@all_trees.map do |e|
+						unless rej == e
+							if e.include?(rej)
+								e.reject!{ |y| y == rej }
+							end
+						end
+					end
+				end
+			end
+			@all_trees.delete_if{|j| j.blank? }
 		end
 		
 		def create_product_table(login)

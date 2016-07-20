@@ -41,10 +41,14 @@ module Import
           
         def recursive_category_tree(category, login)
             acategory = Category.find_by(category_id: category, login_id: login.id)
-            @category_tree << acategory
+            if acategory.is_active == "1"
+                @category_tree << acategory
+            end
             Category.where(parent_id: category, login_id: login.id).map do |cat|
-                @category_tree << cat
-                childrens = Category.where(parent_id: cat.category_id, login_id: login.id)
+                if cat.is_active == "1"
+                    @category_tree << cat
+                end
+                childrens = Category.where(parent_id: cat.category_id, login_id: login.id, is_active: "1")
                 unless childrens.blank?
                     childrens.map do |sub|
                         recursive_category_tree(sub.category_id, login)

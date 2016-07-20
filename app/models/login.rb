@@ -1,5 +1,5 @@
 class Login < ActiveRecord::Base
-    before_save   :check_login_count
+    # before_save   :check_login_count
     before_create :check_url
     validates_presence_of :username, :key, :store_id, :store_url, :target_url
     
@@ -8,6 +8,8 @@ class Login < ActiveRecord::Base
     end
     
     def check_url
-        self.target_url.gsub!(/^(https?):\/\//, "").split('/')[0]
+        if self.target_url.include?("http") 
+            self.target_url.gsub!(/^(https?):\/\//, "").split('/')[0]
+        end
     end
 end
