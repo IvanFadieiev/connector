@@ -5,6 +5,7 @@ require 'byebug'
 require 'csv'
 require 'smarter_csv'
 require 'open-uri'
+require 'import'
 # URL = 'http://tsw-admin.icommerce.se/api/?wsdl'
 
 module Parser
@@ -45,9 +46,7 @@ module Parser
 				Parser.new_array_with_object(arrr, $column_names, login)
 			rescue
 				$error << items
-				puts "------------------------------ERROR-------------------------------------"
-				puts "Category with ID = #{ items[0][:value] } add to the BLACK list!!!"
-				puts "------------------------------ERROR-------------------------------------"
+				p $error
 			end
 
 			begin
@@ -140,12 +139,39 @@ module Parser
 			# $parsed_data = Category.where(login_id: login.id).map do |cat|
 			$parsed_data = Collection.where( login_id: login.id).each do |cat|
 				id = cat.magento_category_id
+			# $parsed_data = Category.where(login_id: login.id, chosen: true).map do |cat|
+				# id = cat.category_id
 				p "Parsed category #{ id }"
 				Parser::ProductList.new.category_products( id )
 				Parser::ProductList.new.check_nil( $products_to_category, id, login )
 			end
 		end
-
+		
+		def array_of_categories_tree(login)
+			mag_ids = Collection.where(login_id: login.id).map(&:magento_category_id)
+			@all_trees = []
+			mag_ids.map do |mag_id|
+				@all_trees << Import::CreateCategories.new.category_tree(mag_id, login).map(&:category_id)
+			end
+			@all_trees.sort!
+			
+			s = @all_trees.size - 1
+			0.upto(s) do |n|
+				0.upto(s) do |i|
+					unless @all_trees[n] == @all_trees[i]
+						# if @all_trees[n+1] != nil
+							if @all_trees[n].include?(@all_trees[i][0])
+								@all_trees[i].map do |c|
+									@all_trees[n].reject!{ |b| b == c }
+								end
+							end
+						# end
+					end
+				end
+			end
+			@all_trees
+		end
+		
 		def create_product_table(login)
 			$error_with_creating_product_table = []
 			parsed_data = JoinTableCategoriesProduct.where(login_id: login.id).map{ |a| a.product_id }
@@ -203,9 +229,9 @@ module Parser
 						end
 					end
 					$hash.merge!(attr_hash)
-					p "Add product with ID: #{arrr[0][:value]}"
-					p "Left #{count+= -1} objects"
-					p '------------------------------------------------------------------------'
+					# p "Add product with ID: #{arrr[0][:value]}"
+					p "Left #{count+= -1} prod"
+					# p '------------------------------------------------------------------------'
 					$all_products << $hash
 				rescue
 					$products_with_errors << $hash

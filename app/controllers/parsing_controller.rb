@@ -1,7 +1,7 @@
 class ParsingController < AuthenticatedController
     before_filter :set_login
     # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
-    before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection]
+    # before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection]
     def category
         
         # ParserProcess.new.delay.parse_categories(@login)
@@ -22,25 +22,26 @@ class ParsingController < AuthenticatedController
     end
     
     def category_product_join_table
-        # level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
-        # @all_categories = []
-        # level.map do |a|
-        #     @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
-        # end
+        level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
+        @all_categories = []
+        level.map do |a|
+            @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
+        end
         @collection = Collection.new
         @shopify_collect = ShopifyAPI::CustomCollection.all
     end
     
     def accepted_collection
-        # @all_categories = Category.where(level: 2, is_active: 1, login_id: @login.id)
-        # @all_categories.map do |category|
-        # level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
-        # @all_categories = []
-        # level.map do |a|
-        #     @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
-        # end
+        level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
+        @all_categories = []
+        level.map do |a|
+            @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
+        end
         @all_categories.map do |array_category|
             array_category.values[0].map do |category|
+                
+                # category.update_attributes(chosen: true)
+                
                 cat_id = category.category_id
                 param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
                 ids = params[param_shopify]
