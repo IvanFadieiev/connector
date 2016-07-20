@@ -120,7 +120,7 @@ module Parser
 					if ( products_to_category.class == Hash ) && products_to_category.include?( :item )
 				    prod_id = products_to_category[:item][0][:value]
 				    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id )
-				    p "Add category ID: #{ id }, product ID: #{ prod_id }"
+				    p "CAT ID: #{ id }, PROD ID: #{ prod_id } login #{login.id}"
 					else
 						products_to_category.map do |product|
 					    prod_id = product[:item][0][:value]
@@ -135,15 +135,21 @@ module Parser
 		end
 
 		def create_join_table_categories_products(login)
+			# $array_cat = []
+			# # $parsed_data = Category.where(login_id: login.id).map do |cat|
+			# $parsed_data = Collection.where( login_id: login.id).each do |cat|
+			# 	id = cat.magento_category_id
+			# # $parsed_data = Category.where(login_id: login.id, chosen: true).map do |cat|
+			# 	# id = cat.category_id
+			# 	p "Parsed category #{ id }"
+			# 	Parser::ProductList.new.category_products( id )
+			# 	Parser::ProductList.new.check_nil( $products_to_category, id, login )
+			# end
 			$array_cat = []
-			# $parsed_data = Category.where(login_id: login.id).map do |cat|
-			$parsed_data = Collection.where( login_id: login.id).each do |cat|
-				id = cat.magento_category_id
-			# $parsed_data = Category.where(login_id: login.id, chosen: true).map do |cat|
-				# id = cat.category_id
-				p "Parsed category #{ id }"
-				Parser::ProductList.new.category_products( id )
-				Parser::ProductList.new.check_nil( $products_to_category, id, login )
+			Parser::ProductList.new.array_of_categories_tree(login).flatten.each do |cat_id|
+				p "Parsed category #{ cat_id }"
+				Parser::ProductList.new.category_products( cat_id )
+				Parser::ProductList.new.check_nil( $products_to_category, cat_id, login )
 			end
 		end
 		
@@ -159,13 +165,11 @@ module Parser
 			0.upto(s) do |n|
 				0.upto(s) do |i|
 					unless @all_trees[n] == @all_trees[i]
-						# if @all_trees[n+1] != nil
-							if @all_trees[n].include?(@all_trees[i][0])
-								@all_trees[i].map do |c|
-									@all_trees[n].reject!{ |b| b == c }
-								end
+						if @all_trees[n].include?(@all_trees[i][0])
+							@all_trees[i].map do |c|
+								@all_trees[n].reject!{ |b| b == c }
 							end
-						# end
+						end
 					end
 				end
 			end

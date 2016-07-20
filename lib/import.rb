@@ -55,47 +55,60 @@ module Import
     end
     
     class   CreateProducts < AuthenticatedController
-        def recursive( children_categories_1_lavel, category, login, data )
-            ids = Collection.where(login_id: login.id).map(&:magento_category_id)
-            unless children_categories_1_lavel.blank?
-                children_categories_2_lavel = []
-                children_categories_1_lavel.uniq.map do |_1_lav_cat|
-                    data.map{|a| children_categories_2_lavel << a if (a.parent_id == _1_lav_cat.category_id)}
-                end
+        # def recursive( children_categories_1_lavel, category, login, data )
+        #     ids = Collection.where(login_id: login.id).map(&:magento_category_id)
+        #     unless children_categories_1_lavel.blank?
+        #         children_categories_2_lavel = []
+        #         children_categories_1_lavel.uniq.map do |_1_lav_cat|
+        #             data.map{|a| children_categories_2_lavel << a if (a.parent_id == _1_lav_cat.category_id)}
+        #         end
                 
-                # создать TargetCategoryImport для каждого из $children_categories_2_lavel
-                unless children_categories_2_lavel.blank?
-                    children_categories_2_lavel.uniq.map do |children|
-                        unless ids.include?(category.magento_category_id)
-                            TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
-                        end
-                    end
-                end
-                unless children_categories_2_lavel.blank?
-                    recursive( children_categories_2_lavel, category, login, data )
-                end
-            end
-        end
+        #         # создать TargetCategoryImport для каждого из $children_categories_2_lavel
+        #         unless children_categories_2_lavel.blank?
+        #             children_categories_2_lavel.uniq.map do |children|
+        #                 unless ids.include?(category.magento_category_id)
+        #                     TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
+        #                 end
+        #             end
+        #         end
+        #         unless children_categories_2_lavel.blank?
+        #             recursive( children_categories_2_lavel, category, login, data )
+        #         end
+        #     end
+        # end
+        
+        # def create_products_to_shop(login)
+        #     CreateCategories.new_with(login)
+        #     ids = Collection.where(login_id: login.id).map(&:magento_category_id)
+        #     created_categories = Collection.where( login_id: login.id ).order('id DESC').distinct
+        #     created_categories.map do |category|
+        #         TargetCategoryImport.create( magento_category_id: category.magento_category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
+        #         $children_categories_1_lavel = Category.where(login_id: login.id, parent_id: category.magento_category_id )
+        #         data = $children_categories_1_lavel
+        #         # создать TargetCategoryImport для каждой дочерней категории
+        #         $children_categories_1_lavel.map do |children|
+        #             unless ids.include?(category.magento_category_id)
+        #                 TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
+        #             end
+        #         end
+                
+        #         recursive( $children_categories_1_lavel, category, login, data )
+    
+        #     end
+        #     create_products(login)
+        # end
+        
         
         def create_products_to_shop(login)
-            CreateCategories.new_with(login)
-            ids = Collection.where(login_id: login.id).map(&:magento_category_id)
-            created_categories = Collection.where( login_id: login.id ).order('id DESC').distinct
-            created_categories.map do |category|
-                TargetCategoryImport.create( magento_category_id: category.magento_category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
-                $children_categories_1_lavel = Category.where(login_id: login.id, parent_id: category.magento_category_id )
-                data = $children_categories_1_lavel
-                # создать TargetCategoryImport для каждой дочерней категории
-                $children_categories_1_lavel.map do |children|
-                    unless ids.include?(category.magento_category_id)
-                        TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
-                    end
+            categories_tree = Parser::ProductList.new.array_of_categories_tree(login)
+            categories_tree.map do |category_tree_ids|
+                target = Collection.find_by(magento_category_id: category_tree_ids[0], login_id: login.id)
+                category_tree_ids.each do |id|
+                    TargetCategoryImport.create( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id )
+                    p 'target created'
                 end
-                
-                recursive( $children_categories_1_lavel, category, login, data )
-    
             end
-            create_products(login)
+            # create_products(login)
         end
         
         def create_products(login)
@@ -170,7 +183,7 @@ module Import
                         else
                             ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight )
                         end
-                        product.magento_categories.group(:category_id).distinct.map do |cat|
+                        product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
                             unless cat.target_category_import.blank?
                                 shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
                                 ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})

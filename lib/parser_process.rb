@@ -12,7 +12,7 @@ class ParserProcess
         Parser::ProductList.new.create_join_table_categories_products(login)
         Parser::ProductList.new.create_product_table(login)
         Parser::Login.new.login( login )
-        Parser::Image.new.product_image(login)
+        # Parser::Image.new.product_image(login)
         Import::CreateCategories.new.create(login)
         # sleep 10
         Import::CreateProducts.new.create_products_to_shop(login)
