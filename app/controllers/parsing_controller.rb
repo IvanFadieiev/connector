@@ -1,7 +1,7 @@
 class ParsingController < AuthenticatedController
     before_filter :set_login
     # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
-    # before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection]
+    before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection]
     def category
         
         # ParserProcess.new.delay.parse_categories(@login)
@@ -22,21 +22,21 @@ class ParsingController < AuthenticatedController
     end
     
     def category_product_join_table
-        level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
-        @all_categories = []
-        level.map do |a|
-            @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
-        end
+        # level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
+        # @all_categories = []
+        # level.map do |a|
+        #     @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
+        # end
         @collection = Collection.new
         @shopify_collect = ShopifyAPI::CustomCollection.all
     end
     
     def accepted_collection
-        level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
-        @all_categories = []
-        level.map do |a|
-            @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
-        end
+        # level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
+        # @all_categories = []
+        # level.map do |a|
+        #     @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
+        # end
         @all_categories.map do |array_category|
             array_category.values[0].map do |category|
                 
@@ -46,7 +46,8 @@ class ParsingController < AuthenticatedController
                 param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
                 ids = params[param_shopify]
                 # #include?("-1") - флаг который показывает, что категорию скипаем
-                unless ids.blank? || ids.include?("-1")
+                # unless ids.blank? || ids.include?("-1")
+                unless ids.blank?
                     ids.map do |shopify_category_id|
                         param_magento = "#{cat_id}_magento_category_id".to_sym
                         Collection.create(

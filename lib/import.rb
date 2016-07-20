@@ -108,102 +108,141 @@ module Import
                     p 'target created'
                 end
             end
-            # create_products(login)
+            create_products(login)
         end
         
         def create_products(login)
             $error_prod = []
             Product.includes(:images, :magento_categories).where(login_id: login.id).uniq.map do |product|
-                
-                # params for product
-                unless product.description.include?("{:\"@xsi:type\"")
-                    body_html = product.description
-                else
-                    body_html = ""
-                end
-                unless (product.price == nil)
-                    price = product.price.to_i
-                else
-                    price = 0
-                end
-                handle        = product.url_key
-                sku           = product.sku
-                title      = product.name
-                barcode       = product.ean
-                status        = product.status
-                weight        = product.weight
-                special_price = product.special_price
-# это для обновления продукта                
-                # exist_products = ShopifyAPI::Variant.where( sku: product.sku )
-                
-                # if exist_products.blank?
-                    if product.shopify_product_id.blank?
-                        # title     = product.name
-                        # unless product.description.include?("{:\"@xsi:type\"")
-                        #     body_html = product.description
-                        # else
-                        #     body_html = ""
-                        # end
-                        # handle = product.url_key
-                        # sku    = product.sku
-                        # unless (product.price == nil)
-                        #     price  = product.price.to_i
-                        # else
-                        #     price = 0
-                        # end
-                        # barcode       = product.ean
-                        # status        = product.status
-                        # weight        = product.weight
-                        # special_price = product.special_price
-                        
-                        if status == "1"
-                            shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
-                        else
-                            shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
-                        end
-                        shop_product.save
-                        id = shop_product.id
-                        p  "ADD PRODUCT: #{id}"
-                        # Product.find(product.id).update_column(:shopify_product_id, id)
-                        ip = ShopifyAPI::Product.find(id)
-                        images_for_product = product.images
-                        unless images_for_product.blank?
-                            images_for_product.map do |image_line|
-                                begin
-                                    src = image_line.img_url
-                                    ip.images << { 'src': src }
-                                    ip.save
-                                rescue
-                                    p "Image not found"
+                begin
+                    # params for product
+                    unless product.description.include?("{:\"@xsi:type\"")
+                        body_html = product.description
+                    else
+                        body_html = ""
+                    end
+                    unless (product.price == nil)
+                        price = product.price.to_i
+                    else
+                        price = 0
+                    end
+                    handle        = product.url_key
+                    sku           = product.sku
+                    title      = product.name
+                    barcode       = product.ean
+                    status        = product.status
+                    weight        = product.weight
+                    special_price = product.special_price
+                    # для обновления продукта                
+                    exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
+                    
+                    if exist_products.blank?
+                        if product.shopify_product_id.blank?
+
+                            if status == "1"
+                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                            else
+                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                            end
+                            shop_product.save
+                            id = shop_product.id
+                            p  "ADD PRODUCT: #{id}"
+                            # Product.find(product.id).update_column(:shopify_product_id, id)
+                            ip = ShopifyAPI::Product.find(id)
+                        # images for product
+                            begin
+                				arrr = $client.call(:call){ message( session:   $session,
+                												     method:    'catalog_product_attribute_media.list',
+                											         productId: product.product_id
+                													 )
+                											}.body[:call_response][:call_return][:item]
+                			rescue => e
+                			    p e
+                			    Parser::Login.new.login(login)
+                			end
+            				images  = []
+            				if arrr.class == Hash
+            					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
+            				else
+            					unless arrr == nil
+            						arrr.map do |a| 
+            							a[:item].map do |b|
+            								images << b[:value] if ((b[:key] == "url") )
+            							end
+            						end
+            					end
+            				end
+            				if images.any?
+            					images.map do |img_url|
+            						$error2 = []
+            						begin
+            						unless img_url.blank?
+            							begin
+            								open(img_url)
+                                            begin
+                                                ip.images << { 'src': img_url }
+                                                ip.save
+                                            rescue
+                                                p "Image not found"
+                                            end        								
+            								p "Image for Product add to table #{img_url}"
+            							rescue
+            							 p 'don`t valid uri for image'	
+            							end
+            						else
+            							p "Product with ID: #{product_id} havn`t image"
+            						end
+            						rescue
+            							$error2 << img_url
+            							p '-----------------------Error($error2)---------------------------'
+            						end
+            					end
+            				end                        
+                            
+                            # images_for_product = product.images
+                            # unless images_for_product.blank?
+                            #     images_for_product.map do |image_line|
+                            #         begin
+                            #             src = image_line.img_url
+                            #             ip.images << { 'src': src }
+                            #             ip.save
+                            #         rescue
+                            #             p "Image not found"
+                            #         end
+                            #     end
+                            # end
+                            
+                            
+                            
+                            if special_price == nil
+                                ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight )
+                            else
+                                ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight )
+                            end
+                            product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
+                                unless cat.target_category_import.blank?
+                                    shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
+                                    ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                    p "Prod #{id} add to cat: #{shop_cat}"
                                 end
                             end
+                            product.update_column(:shopify_product_id, id)
                         end
-                        if special_price == nil
-                            ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight )
-                        else
-                            ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight )
-                        end
-                        product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
-                            unless cat.target_category_import.blank?
-                                shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
-                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                p "Prod #{id} add to cat: #{shop_cat}"
+                        
+                    #обновления продукта
+                    else
+                        exist_products.map do |a|
+                            if special_price == nil
+                                a.variants.first.update_attributes( 'price': price )
+                            else
+                                a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price )
                             end
                         end
-                        product.update_column(:shopify_product_id, id)
                     end
-                    
-# это для обновления продукта
-
-                # else
-                #     exist_products.map do |a|
-                #         if special_price == nil
-                #             a.update_attributes( 'price': price )
-                #         else
-                #             a.update_attributes( 'price': special_price, 'compare_at_price': price )
-                #         end
-                #     end
-                # end
+                rescue => error
+                    p error
+                    CreateCategories.new_with(login)
+                end
             end
         end
     end
