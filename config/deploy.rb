@@ -1,10 +1,10 @@
-lock '3.4.0'
+lock '3.5.0'
 
-set :rvm_ruby_version, '2.2.1@connector'
+# set :rvm_ruby_version, '2.2.1@connector'
 
 set :application, 'connector'
 
-set :repo_url, 'git@bitbucket.org:IvanFadieiev/shopify_app.git'
+set :repo_url, 'git@github.com:IvanFadieiev/connector.git'
 
 set :scm, :git
 
