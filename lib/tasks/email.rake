@@ -1,7 +1,6 @@
 namespace :email do
-  desc "TODO"
+  desc "testing of email"
   task test: :environment do
-    UserMailer.letter(Login.last).deliver_now
+    UserMailer.letter("ivanfadeev91@gmail.com").deliver
   end
-
 end

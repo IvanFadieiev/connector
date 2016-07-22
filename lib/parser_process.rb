@@ -16,8 +16,8 @@ class ParserProcess
         Import::CreateCategories.new.create(login)
         # sleep 10
         Import::CreateProducts.new.create_products_to_shop(login)
-        if login.email
-            UserMailer.letter(login).deliver_now
+        unless login.email.blank?
+            UserMailer.letter(login.email).deliver_now
         end
     end
 end

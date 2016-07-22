@@ -17,11 +17,20 @@ module Import
                         body_html = nil
                     end
                     src = find_category[0].image
-                    
-                    categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
+                    begin
+                        categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
+                    rescue
+                        CreateCategories.new_with(login)
+                        categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
+                    end
                     categ.save
                     unless src.blank? && src.class != Hash
-                        img_cat = ShopifyAPI::CustomCollection.find(categ.id)
+                        begin
+                            img_cat = ShopifyAPI::CustomCollection.find(categ.id)
+                        rescue    
+                            CreateCategories.new_with(login)
+                            img_cat = ShopifyAPI::CustomCollection.find(categ.id)
+                        end
                         img_cat.image = { 'src': "#{login.store_url}/media/catalog/category/#{src}" }
                         img_cat.save
                     end
@@ -59,6 +68,7 @@ module Import
     end
     
     class   CreateProducts < AuthenticatedController
+        extend ShopSession
         # def recursive( children_categories_1_lavel, category, login, data )
         #     ids = Collection.where(login_id: login.id).map(&:magento_category_id)
         #     unless children_categories_1_lavel.blank?
@@ -137,22 +147,42 @@ module Import
                     status        = product.status
                     weight        = product.weight
                     special_price = product.special_price
-                    # для обновления продукта                
-                    exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
+                    # для обновления продукта
+                    begin
+                        exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
+                    rescue
+                        CreateProducts.new_with(login)
+                        exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
+                    end
                     
                     if exist_products.blank?
                         if product.shopify_product_id.blank?
 
                             if status == "1"
-                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                begin
+                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                rescue
+                                    CreateProducts.new_with(login)
+                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                end
                             else
-                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                begin
+                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                rescue
+                                    CreateProducts.new_with(login)
+                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                end
                             end
                             shop_product.save
                             id = shop_product.id
                             p  "ADD PRODUCT: #{id}"
                             # Product.find(product.id).update_column(:shopify_product_id, id)
-                            ip = ShopifyAPI::Product.find(id)
+                            begin
+                                ip = ShopifyAPI::Product.find(id)
+                            rescue
+                                CreateProducts.new_with(login)
+                                ip = ShopifyAPI::Product.find(id)
+                            end
                         # images for product
                             begin
                 				arrr = $client.call(:call){ message( session:   $session,
@@ -163,6 +193,11 @@ module Import
                 			rescue => e
                 			    p e
                 			    Parser::Login.new.login(login)
+                			    arrr = $client.call(:call){ message( session:   $session,
+                												     method:    'catalog_product_attribute_media.list',
+                											         productId: product.product_id
+                													 )
+                											}.body[:call_response][:call_return][:item]
                 			end
             				images  = []
             				if arrr.class == Hash
@@ -226,8 +261,14 @@ module Import
                             product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
                                 unless cat.target_category_import.blank?
                                     shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
-                                    ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                    p "Prod #{id} add to cat: #{shop_cat}"
+                                    begin
+                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                        p "Prod #{id} add to cat: #{shop_cat}"
+                                    rescue
+                                        CreateProducts.new_with(login)
+                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                        p "Prod #{id} add to cat: #{shop_cat}"
+                                    end
                                 end
                             end
                             product.update_column(:shopify_product_id, id)
@@ -238,8 +279,10 @@ module Import
                         exist_products.map do |a|
                             if special_price == nil
                                 a.variants.first.update_attributes( 'price': price )
+                                p 'product updated'
                             else
                                 a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price )
+                                p 'product updated'
                             end
                         end
                     end

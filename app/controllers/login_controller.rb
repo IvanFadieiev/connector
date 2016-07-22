@@ -1,5 +1,6 @@
 class LoginController < ApplicationController
     before_filter :set_login, except: [:create]
+    around_filter :shopify_session, only: :create
     def login
         @login = "login"
     end
@@ -8,7 +9,7 @@ class LoginController < ApplicationController
         @login = Login.new(login_params)
         if @login.save
             # create_dirs(@login.id)
-            @login.update_column(:target_url, Shop.last.shopify_domain )
+            @login.update_column(:target_url, ShopifyAPI::Shop.current.domain )
             session[:login_id] = @login.id
             savon_login(@login)
         else

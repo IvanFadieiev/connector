@@ -34,7 +34,18 @@
   </div>
 </div>
 
-<cener>
-  <%= link_to "test", finish_page_path%><br>
-  zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde
-<center>
+<% if Rails.env.development? %>
+  <br>
+  <center>
+    <%= link_to "test", finish_page_path%><br>
+    zCBt5lOPsdoaUYs1wu4jtVlFVG4FXIu6c7PGEAPJxohUqwnAde<br><br>
+  
+    Current_ shop:<br> <%= ShopifyAPI::Shop.current.domain %><br>
+    
+    <%= link_to "Logout", logout_path %><br>
+    
+    <%= ENV['EMAIL_PASS']%><br>
+    <%= ENV['EMAIL_ADDR']%>
+    
+  </center>
+<% end %>

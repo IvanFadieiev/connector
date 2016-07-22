@@ -1,9 +1,9 @@
 class UserMailer < ApplicationMailer
-    default from: "ivanfadeev91@gmail.com"
+    default from: ENV['EMAIL_ADDR']
     
-    def letter(login)
-        if login.email
-            mail(to: login.email, subject: 'Import of DB')
+    def letter(email)
+        if email
+            mail(to: email, subject: 'Import of DB')
         end
     end
 end

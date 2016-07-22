@@ -57,3 +57,4 @@ gem 'slim'
 # gem 'delayed-web'
 gem 'simple_form'
 # gem 'pg'
+gem "figaro"

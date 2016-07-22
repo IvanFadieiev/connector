@@ -22,9 +22,13 @@ module Parser
 
 	class CategoryList
 		def categories(login)
-			# Parser::Login.new.login( url, username, key, storeView )
-			# $response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
-			$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
+			begin
+				$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
+			rescue
+				Parser::Login.new.login(login)
+				$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
+			end
+		
 		end
 
 		def main_category(login)
@@ -115,6 +119,11 @@ module Parser
 													}.body[:call_response][:call_return][:item]
 			rescue
 				Parser::Login.new.login(login)
+				$products_to_category = $client.call(:call){ message( session: $session,
+																	  method: 'catalog_category.assignedProducts',
+																	  categoryId: id
+																	  )
+													}.body[:call_response][:call_return][:item]
 			end
 		end
 
@@ -242,10 +251,18 @@ module Parser
 			count = array_uniq_products_ids.count
 			array_uniq_products_ids.map do |product_id|
 				begin
-					arrr = $client.call( :call ){ message( session: $session,
-														  method: 'catalog_product.info',
-														  productId: product_id
-														  ) }.body[:call_response][:call_return][:item]
+					begin
+						arrr = $client.call( :call ){ message( session: $session,
+																  method: 'catalog_product.info',
+																  productId: product_id
+																  ) }.body[:call_response][:call_return][:item]			
+					rescue
+						Parser::Login.new.login(login)
+						arrr = $client.call( :call ){ message( session: $session,
+																	  method: 'catalog_product.info',
+																	  productId: product_id
+																	  ) }.body[:call_response][:call_return][:item]
+					end					
 					Parser.new_array_with_object(arrr, $column_names, login)
 					attr_hash = {}
 					arrr_keys = arrr.map{|a| a[:key]}
@@ -276,10 +293,18 @@ module Parser
 		end
 
 		def info_soap_product(product_id)
-			$product = $client.call( :call ){ message( session: $session,
-													  method: 'catalog_product.info',
-													  productId: product_id
-													  ) }.body[:call_response][:call_return][:item]
+			begin
+				arrr = $client.call( :call ){ message( session: $session,
+														  method: 'catalog_product.info',
+														  productId: product_id
+														  ) }.body[:call_response][:call_return][:item]			
+			rescue
+				Parser::Login.new.login(login)
+				arrr = $client.call( :call ){ message( session: $session,
+															  method: 'catalog_product.info',
+															  productId: product_id
+															  ) }.body[:call_response][:call_return][:item]
+			end
 		end
 	end
 
@@ -287,10 +312,19 @@ module Parser
 		def category_image(login)
 			parsed_data = SmarterCSV.process( "public/#{login.id}/categories_products/join_table_categories_products.csv" ).map{ |a| a[:category_id] }.uniq
 			parsed_data.map do |category_id|
-				arrr  = $client.call(:call){ message( session: $session,
+				begin
+					arrr = $client.call(:call){ message( session: $session,
+													 		   method: 'catalog_category.info',
+															   productId: category_id
+															  )}.body[:call_response][:call_return][:item]			
+				rescue
+					Parser::Login.new.login(login)
+					arrr = $client.call(:call){ message( session: $session,
 													 		   method: 'catalog_category.info',
 															   productId: category_id
 															  )}.body[:call_response][:call_return][:item]
+				end
+				
 				image = []
 				arrr.map{|a| image << a[:value] if ((a[:key] == "image" ) && (a[:value] != {:"@xsi:type"=>"xsd:string"}))}
 				unless image[0].blank?
@@ -308,11 +342,20 @@ module Parser
 			$all_prod_imgs = []
 			parsed_data = JoinTableCategoriesProduct.where(login_id: login.id).map{ |a| a.product_id }.uniq
 			parsed_data.map do |product_id|
-				arrr = $client.call(:call){ message( session:   $session,
+				begin
+					arrr = $client.call(:call){ message( session:   $session,
+												     method:    'catalog_product_attribute_media.list',
+											         productId: product_id
+													 )
+											}.body[:call_response][:call_return][:item]			
+				rescue
+					Parser::Login.new.login(login)
+					arrr = $client.call(:call){ message( session:   $session,
 												     method:    'catalog_product_attribute_media.list',
 											         productId: product_id
 													 )
 											}.body[:call_response][:call_return][:item]
+				end
 				images  = []
 				if arrr.class == Hash
 					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
