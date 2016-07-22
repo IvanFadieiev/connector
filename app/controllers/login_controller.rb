@@ -8,6 +8,7 @@ class LoginController < ApplicationController
         @login = Login.new(login_params)
         if @login.save
             # create_dirs(@login.id)
+            @login.update_column(:target_url, Shop.last.shopify_domain )
             session[:login_id] = @login.id
             savon_login(@login)
         else
@@ -43,6 +44,6 @@ class LoginController < ApplicationController
     end
     
     def login_params
-        params.require(:login).permit(:username, :key, :store_id,:store_url, :target_url, :email )
+        params.require(:login).permit(:username, :key, :store_id,:store_url, :email )
     end
 end

@@ -244,7 +244,7 @@ module Import
                         end
                     end
                 rescue => error
-                    p error
+                    p "Error with update product #{error}"
                     CreateCategories.new_with(login)
                 end
             end

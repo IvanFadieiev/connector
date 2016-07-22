@@ -150,6 +150,16 @@ module Parser
 			# 	Parser::ProductList.new.check_nil( $products_to_category, id, login )
 			# end
 			$array_cat = []
+			
+			# array_category = Parser::ProductList.new.array_of_categories_tree(login).flatten.map |c|
+			# 	find_cat = Category.find_by(category_id: c, login_id: login.id)
+			# 	unless find_cat.blank?
+			# 		id = find_cat.category_id
+			# 		array_category.delete_if{|m| m == id}
+			# 	end
+			# end
+			
+			# подставить array_category вместо Parser::ProductList.new.array_of_categories_tree(login).flatten 
 			Parser::ProductList.new.array_of_categories_tree(login).flatten.each do |cat_id|
 				p "Parsed category #{ cat_id }"
 				Parser::ProductList.new.category_products( cat_id, login )
@@ -357,8 +367,10 @@ module Parser
 			end
 		end
 		if attr_hash.keys.include?(:category_id) && attr_hash.keys.include?(:parent_id)
-			cat_to_p = Category.create(category_id: attr_hash[:category_id], parent_id: attr_hash[:parent_id], name: attr_hash[:name], description: attr_hash[:description], is_active: attr_hash[:is_active].to_i, level: attr_hash[:level].to_i, image: attr_hash[:image], login_id: login.id)
-			p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
+			unless Category.find_by(name: attr_hash[:name], login_id: login.id)
+				cat_to_p = Category.create(category_id: attr_hash[:category_id], parent_id: attr_hash[:parent_id], name: attr_hash[:name], description: attr_hash[:description], is_active: attr_hash[:is_active].to_i, level: attr_hash[:level].to_i, image: attr_hash[:image], login_id: login.id)
+				p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
+			end
 		end
 		$hash.merge!(attr_hash)
 	end
