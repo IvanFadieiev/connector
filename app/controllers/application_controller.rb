@@ -1,8 +1,8 @@
 class ApplicationController < ActionController::Base
   include ShopifyApp::Controller
-  # before_action :login_again_if_different_shop
+  before_action :login_again_if_different_shop
   # around_filter :shopify_session
-  layout ShopifyApp.configuration.embedded_app? ? 'embedded_app' : 'application'
+  # layout ShopifyApp.configuration.embedded_app? ? 'embedded_app' : 'application'
   protect_from_forgery with: :exception
   
   def savon_login(login)
