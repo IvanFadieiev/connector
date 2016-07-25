@@ -4,7 +4,7 @@ lock '3.5.0'
 
 set :application, 'connector'
 
-set :repo_url, 'git@github.com:IvanFadieiev/connector.git'
+set :repo_url, 'https://github.com/IvanFadieiev/connector.git'
 
 set :scm, :git
 

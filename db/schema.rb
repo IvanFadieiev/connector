@@ -14,126 +14,126 @@
 ActiveRecord::Schema.define(version: 20160719195944) do
 
   create_table "categories", force: :cascade do |t|
-    t.integer  "category_id"
-    t.integer  "parent_id"
-    t.string   "name"
-    t.text     "description"
-    t.string   "is_active"
-    t.integer  "level"
-    t.string   "image"
-    t.integer  "login_id"
-    t.datetime "created_at",  null: false
-    t.datetime "updated_at",  null: false
+    t.integer  "category_id", limit: 4
+    t.integer  "parent_id",   limit: 4
+    t.string   "name",        limit: 255
+    t.text     "description", limit: 65535
+    t.string   "is_active",   limit: 255
+    t.integer  "level",       limit: 4
+    t.string   "image",       limit: 255
+    t.integer  "login_id",    limit: 4
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
     t.boolean  "chosen"
   end
 
-  add_index "categories", ["category_id"], name: "index_categories_on_category_id"
-  add_index "categories", ["parent_id"], name: "index_categories_on_parent_id"
+  add_index "categories", ["category_id"], name: "index_categories_on_category_id", using: :btree
+  add_index "categories", ["parent_id"], name: "index_categories_on_parent_id", using: :btree
 
   create_table "collections", force: :cascade do |t|
-    t.integer  "shopify_category_id"
-    t.integer  "magento_category_id"
-    t.datetime "created_at",          null: false
-    t.datetime "updated_at",          null: false
-    t.integer  "login_id"
+    t.integer  "shopify_category_id", limit: 4
+    t.integer  "magento_category_id", limit: 4
+    t.datetime "created_at",                    null: false
+    t.datetime "updated_at",                    null: false
+    t.integer  "login_id",            limit: 4
   end
 
-  add_index "collections", ["magento_category_id"], name: "index_collections_on_magento_category_id"
-  add_index "collections", ["shopify_category_id"], name: "index_collections_on_shopify_category_id"
+  add_index "collections", ["magento_category_id"], name: "index_collections_on_magento_category_id", using: :btree
+  add_index "collections", ["shopify_category_id"], name: "index_collections_on_shopify_category_id", using: :btree
 
   create_table "delayed_jobs", force: :cascade do |t|
-    t.integer  "priority",   default: 0, null: false
-    t.integer  "attempts",   default: 0, null: false
-    t.text     "handler",                null: false
-    t.text     "last_error"
+    t.integer  "priority",   limit: 4,     default: 0, null: false
+    t.integer  "attempts",   limit: 4,     default: 0, null: false
+    t.text     "handler",    limit: 65535,             null: false
+    t.text     "last_error", limit: 65535
     t.datetime "run_at"
     t.datetime "locked_at"
     t.datetime "failed_at"
-    t.string   "locked_by"
-    t.string   "queue"
+    t.string   "locked_by",  limit: 255
+    t.string   "queue",      limit: 255
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "delayed_jobs", ["priority", "run_at"], name: "delayed_jobs_priority"
+  add_index "delayed_jobs", ["priority", "run_at"], name: "delayed_jobs_priority", using: :btree
 
   create_table "join_table_categories_products", force: :cascade do |t|
-    t.integer  "category_id"
-    t.integer  "product_id"
-    t.integer  "login_id"
-    t.datetime "created_at",  null: false
-    t.datetime "updated_at",  null: false
+    t.integer  "category_id", limit: 4
+    t.integer  "product_id",  limit: 4
+    t.integer  "login_id",    limit: 4
+    t.datetime "created_at",            null: false
+    t.datetime "updated_at",            null: false
   end
 
-  add_index "join_table_categories_products", ["category_id"], name: "index_join_table_categories_products_on_category_id"
-  add_index "join_table_categories_products", ["product_id"], name: "index_join_table_categories_products_on_product_id"
+  add_index "join_table_categories_products", ["category_id"], name: "index_join_table_categories_products_on_category_id", using: :btree
+  add_index "join_table_categories_products", ["product_id"], name: "index_join_table_categories_products_on_product_id", using: :btree
 
   create_table "logins", force: :cascade do |t|
-    t.string   "username"
-    t.string   "key"
-    t.integer  "store_id"
-    t.datetime "created_at",                        null: false
-    t.datetime "updated_at",                        null: false
-    t.string   "store_url"
-    t.boolean  "categories_parsed", default: false
-    t.string   "target_url"
-    t.string   "email"
+    t.string   "username",          limit: 255
+    t.string   "key",               limit: 255
+    t.integer  "store_id",          limit: 4
+    t.datetime "created_at",                                    null: false
+    t.datetime "updated_at",                                    null: false
+    t.string   "store_url",         limit: 255
+    t.boolean  "categories_parsed",             default: false
+    t.string   "target_url",        limit: 255
+    t.string   "email",             limit: 255
   end
 
   create_table "product_images", force: :cascade do |t|
-    t.integer  "product_id"
-    t.string   "img_url"
-    t.integer  "login_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.integer  "product_id", limit: 4
+    t.string   "img_url",    limit: 255
+    t.integer  "login_id",   limit: 4
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
   end
 
-  add_index "product_images", ["product_id"], name: "index_product_images_on_product_id"
+  add_index "product_images", ["product_id"], name: "index_product_images_on_product_id", using: :btree
 
   create_table "products", force: :cascade do |t|
-    t.integer  "product_id"
-    t.string   "prod_type"
-    t.string   "sku"
-    t.string   "name"
-    t.string   "ean"
-    t.text     "description"
-    t.string   "price"
-    t.string   "special_price"
-    t.string   "special_from_date"
-    t.string   "special_to_date"
-    t.string   "url_key"
-    t.string   "image"
-    t.string   "color"
-    t.string   "status"
-    t.string   "weight"
-    t.string   "set"
-    t.string   "size"
-    t.integer  "login_id"
-    t.datetime "created_at",                   null: false
-    t.datetime "updated_at",                   null: false
+    t.integer  "product_id",         limit: 4
+    t.string   "prod_type",          limit: 255
+    t.string   "sku",                limit: 255
+    t.string   "name",               limit: 255
+    t.string   "ean",                limit: 255
+    t.text     "description",        limit: 65535
+    t.string   "price",              limit: 255
+    t.string   "special_price",      limit: 255
+    t.string   "special_from_date",  limit: 255
+    t.string   "special_to_date",    limit: 255
+    t.string   "url_key",            limit: 255
+    t.string   "image",              limit: 255
+    t.string   "color",              limit: 255
+    t.string   "status",             limit: 255
+    t.string   "weight",             limit: 255
+    t.string   "set",                limit: 255
+    t.string   "size",               limit: 255
+    t.integer  "login_id",           limit: 4
+    t.datetime "created_at",                       null: false
+    t.datetime "updated_at",                       null: false
     t.integer  "shopify_product_id", limit: 8
   end
 
-  add_index "products", ["product_id"], name: "index_products_on_product_id"
+  add_index "products", ["product_id"], name: "index_products_on_product_id", using: :btree
 
   create_table "shops", force: :cascade do |t|
-    t.string   "shopify_domain", null: false
-    t.string   "shopify_token",  null: false
+    t.string   "shopify_domain", limit: 255, null: false
+    t.string   "shopify_token",  limit: 255, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "shops", ["shopify_domain"], name: "index_shops_on_shopify_domain", unique: true
+  add_index "shops", ["shopify_domain"], name: "index_shops_on_shopify_domain", unique: true, using: :btree
 
   create_table "target_category_imports", force: :cascade do |t|
-    t.integer  "magento_category_id"
-    t.integer  "shopify_category_id"
-    t.integer  "login_id"
-    t.datetime "created_at",          null: false
-    t.datetime "updated_at",          null: false
+    t.integer  "magento_category_id", limit: 4
+    t.integer  "shopify_category_id", limit: 4
+    t.integer  "login_id",            limit: 4
+    t.datetime "created_at",                    null: false
+    t.datetime "updated_at",                    null: false
   end
 
-  add_index "target_category_imports", ["magento_category_id"], name: "index_target_category_imports_on_magento_category_id"
-  add_index "target_category_imports", ["shopify_category_id"], name: "index_target_category_imports_on_shopify_category_id"
+  add_index "target_category_imports", ["magento_category_id"], name: "index_target_category_imports_on_magento_category_id", using: :btree
+  add_index "target_category_imports", ["shopify_category_id"], name: "index_target_category_imports_on_shopify_category_id", using: :btree
 
 end

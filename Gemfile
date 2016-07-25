@@ -22,7 +22,9 @@ gem 'turbolinks'
 gem 'jbuilder', '~> 2.0'
 # bundle exec rake doc:rails generates the API under doc/api.
 gem 'sdoc', '~> 0.4.0', group: :doc
-
+# group :production do
+#   gem 'mysql2'
+# end
 group :development, :test do
   gem 'sqlite3'
   gem 'byebug'
@@ -30,7 +32,6 @@ end
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
-  gem 'pg'
   gem 'spring'
   gem 'web-console', '~> 2.0'
   gem "capistrano", "~> 3.4"
@@ -38,7 +39,7 @@ group :development do
   gem 'capistrano-rails', '1.1.6'
   gem 'capistrano-bundler', '1.1.4'
 end
-
+gem 'mysql2'
 gem 'shopify_app', '6.2.0'
 gem 'smarter_csv'
 gem 'savon', '~> 2.11.0'
