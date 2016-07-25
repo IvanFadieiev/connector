@@ -1,9 +1,0 @@
-default: &default
-    EMAIL_ADDR: 
-    EMAIL_PASS: 
-
-development:
-    <<: *default
-    
-production:
-    <<: *default

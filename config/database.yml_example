@@ -1,9 +1,0 @@
-default: &default
-  adapter: mysql2
-  encoding: utf8
-  username: 
-  password:
-
-production:
-  <<: *default
-  database: 
