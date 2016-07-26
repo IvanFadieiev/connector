@@ -1,4 +1,5 @@
 class LoginController < ApplicationController
+    before_action :authenticate_vendor!
     before_filter :set_login, except: [:create]
     around_filter :shopify_session, only: :create
     def login

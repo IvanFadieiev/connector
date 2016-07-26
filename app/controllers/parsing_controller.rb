@@ -1,4 +1,5 @@
 class ParsingController < AuthenticatedController
+    before_action :authenticate_vendor!
     before_filter :set_login
     # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
     before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection]

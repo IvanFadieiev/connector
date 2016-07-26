@@ -52,3 +52,4 @@ gem 'slim'
 # gem 'delayed-web'
 gem 'simple_form'
 gem "figaro"
+gem 'devise'

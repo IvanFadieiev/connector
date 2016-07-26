@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  devise_for :vendors
   # mount Delayed::Web::Engine, at: '/jobs'
   require 'sidekiq/web'
   
