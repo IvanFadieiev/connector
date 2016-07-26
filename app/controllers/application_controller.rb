@@ -7,7 +7,7 @@ class ApplicationController < ActionController::Base
   
   def savon_login(login)
     begin
-      @login = Login.find(session[:login_id])
+      @login = Login.find(current_vendor.logins.last.id)
       Parser::Login.new.login( login )
       redirect_to success_page_path
     rescue

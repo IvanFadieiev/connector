@@ -7,15 +7,21 @@ class LoginController < ApplicationController
     end
     
     def create
-        @login = Login.new(login_params)
-        if @login.save
-            # create_dirs(@login.id)
-            @login.update_column(:target_url, ShopifyAPI::Shop.current.domain )
-            session[:login_id] = @login.id
-            savon_login(@login)
+        @exist_login = Login.find_by(target_url: ShopifyAPI::Shop.current.domain, vendor_id: current_vendor.id)
+        if @exist_login.blank?
+            @login = Login.new(login_params)
+            if @login.save
+                @login.update_column(:vendor_id, current_vendor.id )
+                @login.update_column(:target_url, ShopifyAPI::Shop.current.domain )
+                session[:login_id] = @login.id
+                savon_login(@login)
+            else
+                flash.now[:notice] = "Sorry! Try again!"
+                render "home/index"
+            end
         else
-            flash.now[:notice] = "Sorry! Try again!"
-            render "home/index"
+            Parser::Login.new.login(@exist_login)
+            redirect_to exists_login_path
         end
     end
     

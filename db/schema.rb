@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160726122114) do
+ActiveRecord::Schema.define(version: 20160726143913) do
 
   create_table "categories", force: :cascade do |t|
     t.integer  "category_id", limit: 4
@@ -78,10 +78,10 @@ ActiveRecord::Schema.define(version: 20160726122114) do
     t.boolean  "categories_parsed",             default: false
     t.string   "target_url",        limit: 255
     t.string   "email",             limit: 255
-    t.integer  "shop_id",           limit: 4
+    t.integer  "vendor_id",         limit: 4
   end
 
-  add_index "logins", ["shop_id"], name: "index_logins_on_shop_id", using: :btree
+  add_index "logins", ["vendor_id"], name: "index_logins_on_vendor_id", using: :btree
 
   create_table "product_images", force: :cascade do |t|
     t.integer  "product_id", limit: 4
@@ -124,11 +124,9 @@ ActiveRecord::Schema.define(version: 20160726122114) do
     t.string   "shopify_token",  limit: 255, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "vendor_id",      limit: 4
   end
 
   add_index "shops", ["shopify_domain"], name: "index_shops_on_shopify_domain", unique: true, using: :btree
-  add_index "shops", ["vendor_id"], name: "index_shops_on_vendor_id", using: :btree
 
   create_table "target_category_imports", force: :cascade do |t|
     t.integer  "magento_category_id", limit: 4

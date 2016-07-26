@@ -32,6 +32,10 @@ class ParsingController < AuthenticatedController
         @shopify_collect = ShopifyAPI::CustomCollection.all
     end
     
+    def exists_login
+            
+    end
+    
     def accepted_collection
         # level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
         # @all_categories = []
@@ -79,7 +83,7 @@ class ParsingController < AuthenticatedController
     end
     
     def set_login
-        @login = Login.find(session[:login_id])
+        @login = Login.find(current_vendor.logins.last.id)
         # @login = Login.find(451)
     end
 end
