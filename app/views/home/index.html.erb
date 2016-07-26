@@ -31,7 +31,6 @@
         <%= f.submit %>
       <% end %>
       <br><br>
-      <center>Leave current shop: <%= link_to "Logout", logout_path %></center><br>
     </div>
   </div>
 </div>
@@ -48,6 +47,3 @@
     
   </center>
 <% end %>
-
-
-<br><%= link_to('Logout', destroy_vendor_session_path, :method => :delete) %>

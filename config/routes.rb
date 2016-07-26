@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  devise_for :vendors
+  devise_for :vendors, :skip => :authenticated
   # mount Delayed::Web::Engine, at: '/jobs'
   require 'sidekiq/web'
   
