@@ -11,7 +11,7 @@
                         <% level_cat.values[0].each do |category| %>
                             <%= category[:name] %><br>
                             <%= hidden_field_tag "#{category[:category_id]}_magento_category_id", category[:category_id]%>
-                            <%= select_tag "#{category[:category_id]}_shopify_categories_ids[]", options_for_select([["- Create new category -", 0], ['- Skip -', -1]] + @shopify_collect.collect{ |u| [u.title, u.id] }), {:multiple => :multiple, rows: 8} %><br><br><br>
+                            <%= select_tag "#{category[:category_id]}_shopify_categories_ids[]", options_for_select([["- Create new category -", 0], ['- Skip -', -1], ['- As parent -', -2]] + @shopify_collect.collect{ |u| [u.title, u.id] }), {:multiple => :multiple, rows: 8} %><br><br><br>
                         <% end %>
                     <% end%>
                     <%= f.submit "Accept" %>

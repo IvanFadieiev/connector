@@ -32,11 +32,7 @@ class ParsingController < AuthenticatedController
     end
     
     def accepted_collection
-        # level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
-        # @all_categories = []
-        # level.map do |a|
-        #     @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
-        # end
+        @all_chosen_ids_for_categories = []
         @all_categories.map do |array_category|
             array_category.values[0].map do |category|
                 
@@ -46,9 +42,10 @@ class ParsingController < AuthenticatedController
                 param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
                 ids = params[param_shopify]
                 # #include?("-1") - флаг который показывает, что категорию скипаем
-                # unless ids.blank? || ids.include?("-1")
-                unless ids.blank?
+                # "-1" -- skip, "-2" -- as parent
+                unless ids.blank? || ids.include?("-2")
                     ids.map do |shopify_category_id|
+                        @all_chosen_ids_for_categories << shopify_category_id
                         param_magento = "#{cat_id}_magento_category_id".to_sym
                         Collection.create(
                                           shopify_category_id:  shopify_category_id,
@@ -59,7 +56,11 @@ class ParsingController < AuthenticatedController
                 end
             end
         end
-        redirect_to finish_page_path and return
+        unless @all_chosen_ids_for_categories.blank?
+            redirect_to finish_page_path and return
+        else
+            redirect_to category_product_join_table_path
+        end
     end
     
     def finish_page
