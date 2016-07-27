@@ -2,12 +2,13 @@ class LoginController < ApplicationController
     before_action :authenticate_vendor!
     before_filter :set_login, except: [:create]
     around_filter :shopify_session, only: :create
+
     def login
         @login = "login"
     end
     
     def create
-        @exist_login = Login.find_by(target_url: ShopifyAPI::Shop.current.domain, vendor_id: current_vendor.id)
+        @exist_login = Login.find_by(target_url: ShopifyAPI::Shop.current.domain, vendor_id: current_vendor.id, store_id: params[:store_id])
         if @exist_login.blank?
             @login = Login.new(login_params)
             if @login.save
@@ -21,7 +22,7 @@ class LoginController < ApplicationController
             end
         else
             Parser::Login.new.login(@exist_login)
-            redirect_to exists_login_path
+            redirect_to exists_login_path(@exist_login)
         end
     end
     
@@ -48,7 +49,7 @@ class LoginController < ApplicationController
     end
     
     def set_login
-        @login = Login.find(session[:login_id])
+        @login = Login.find(current_vendor.logins.last.id)
     end
     
     def login_params

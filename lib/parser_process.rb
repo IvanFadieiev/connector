@@ -1,4 +1,5 @@
 class ParserProcess
+    
     def parse_categories(login)
         # @login = login
         # login = Login.find(451)

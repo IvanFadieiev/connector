@@ -1,0 +1,6 @@
+<% unless current_vendor.logins.blank? %>
+  <h4>Exists logins for this shop:</h4>
+  <% current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.domain ).each do |login| %>
+    <%= link_to "#{login.target_url}", exists_login_path(login) %> with category id: <%= login.store_id %><br>
+  <% end %>
+<% end %>

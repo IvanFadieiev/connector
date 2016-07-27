@@ -45,11 +45,11 @@ gem 'smarter_csv'
 gem 'savon', '~> 2.11.0'
 gem 'bootstrap-sass', '~> 3.3.6'
 gem 'nprogress-rails'
-gem 'sidekiq'
-gem 'sinatra', require: false
+# gem 'sidekiq'
+# gem 'sinatra', require: false
 gem 'slim'
-# gem 'delayed_job_active_record'
-# gem 'delayed-web'
+gem 'delayed_job_active_record'
+gem 'delayed-web'
 gem 'simple_form'
 gem "figaro"
 gem 'devise'

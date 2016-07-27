@@ -12,10 +12,7 @@
 <div class="container">
   <div class = "row">
     <div class="col-md-4">
-      <h4>Exists logins:</h4>
-      <% @exists_logins.each do |login| %>
-        <%= link_to "#{login.target_url}", "#" %>
-      <% end %>
+       <%= render partial: 'layouts/current_vendor_logins' %>
     </div>
     <div class="col-md-4">
       <%= simple_form_for @login do |f| %>

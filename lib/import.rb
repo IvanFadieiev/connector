@@ -118,7 +118,9 @@ module Import
             categories_tree.map do |category_tree_ids|
                 target = Collection.find_by(magento_category_id: category_tree_ids[0], login_id: login.id)
                 category_tree_ids.each do |id|
-                    TargetCategoryImport.create( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id )
+                    if TargetCategoryImport.find_by( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id ).blank?
+                        TargetCategoryImport.create( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id )
+                    end
                     p 'target created'
                 end
             end
@@ -284,6 +286,7 @@ module Import
                                 a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price )
                                 p 'product updated'
                             end
+                            sleep 0.5
                         end
                     end
                 rescue => error
