@@ -21,7 +21,7 @@ Rails.application.routes.draw do
   post 'accepted_collection',         to: 'parsing#accepted_collection'
   get  'finish_page',                 to: 'parsing#finish_page'
   get  'exists_login/:login_id',      to: 'parsing#exists_login',               as: 'exists_login'
-  get  'in_process',          to: 'parsing#in_process'
+  get  'in_process',                  to: 'parsing#in_process'
   
   # mount Sidekiq::Web, at: '/sidekiq'
 

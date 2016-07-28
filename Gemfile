@@ -53,3 +53,5 @@ gem 'delayed-web'
 gem 'simple_form'
 gem "figaro"
 gem 'devise'
+gem 'activerecord-session_store'
+gem 'daemons'

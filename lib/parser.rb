@@ -132,13 +132,17 @@ module Parser
 				begin
 					if ( products_to_category.class == Hash ) && products_to_category.include?( :item )
 				    prod_id = products_to_category[:item][0][:value]
-				    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id )
-				    p "CAT ID: #{ id }, PROD ID: #{ prod_id } login #{login.id}"
+				    	if JoinTableCategoriesProduct.where(category_id: id, product_id: prod_id, login_id: login.id ).blank?
+						    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id )
+						    p "CAT ID: #{ id }, PROD ID: #{ prod_id } login #{login.id}"
+						end
 					else
 						products_to_category.map do |product|
-					    prod_id = product[:item][0][:value]
-					    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id)
-					    p "CAT ID: #{ id }, PROD ID: #{ prod_id } login #{login.id}"
+						    prod_id = product[:item][0][:value]
+						    if JoinTableCategoriesProduct.where(category_id: id, product_id: prod_id, login_id: login.id).blank?
+							    JoinTableCategoriesProduct.create(category_id: id, product_id: prod_id, login_id: login.id)
+							    p "CAT ID: #{ id }, PROD ID: #{ prod_id } login #{login.id}"
+							end
 						end
 					end
 				rescue
@@ -286,8 +290,10 @@ module Parser
 			end
 			
 			$all_products.map do |prod|
-				p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
-				p "Product with ID: #{p.id}  added to the table"
+				if Product.where(login_id: login.id, product_id: prod[:product_id]).blank?
+					p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
+					p "Product with ID: #{p.id}  added to the table"
+				end
 			end
 			$all_products = []
 		end
@@ -418,119 +424,3 @@ module Parser
 		$hash.merge!(attr_hash)
 	end
 end
-
-
-
-
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p "Do you want to create CATEGORIES listing? yes/no"
-# answer = gets.chomp
-# case answer
-# 	when "yes", "y"
-#  		p '---------------------------------------------------------------------------------------'
-# 		start = Time.now
-# 		p 'Start of the parsing categories'
-# 		Parser::CategoryList.new.create_categories_table( url, username, key, storeView )
-# 		stop = Time.now
-# 		time  =  stop - start
-# 		min = ( time/60 ).to_i
-# 		sec = ( time - min*60 ).to_i
-# 		p "Operation took: #{ min } min #{ sec } sec!"
-# 		p '---------------------------------------------------------------------------------------'
-# 	else
-# 		"Ok, we go ahead!"
-# 	end
-
-
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p "Do you want to create JOIN TABLE CATEGORY_PRODUCT listing? yes/no"
-# answer = gets.chomp
-# case answer
-# 	when "yes", "y"
-# 		start = Time.now
-# 		Parser::ProductList.new.create_join_table_categories_products
-# 		stop = Time.new
-# 		time  =  stop - start
-# 		min = ( time/60 ).to_i
-# 		sec = ( time - min*60 ).to_i
-# 		p "Operation took: #{ min } min #{ sec } sec!"
-# 	else
-# 		"Ok, we go ahead!"
-# 	end
-
-
-
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p "Do you want to create products listing? yes/no"
-# answer = gets.chomp
-# case answer
-# 	when "yes", "y"
-# 		start = Time.now
-# 		Parser::ProductList.new.create_product_table
-# 		stop = Time.new
-# 		time  =  stop - start
-# 		min = ( time/60 ).to_i
-# 		sec = ( time - min*60 ).to_i
-# 		p "Operation took: #{ min } min #{ sec } sec!"
-# 	else
-# 		"Ok, we go ahead!"
-# 	end
-
-
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p "Do you want to create IMAGES FOR CATEGORIES? yes/no"
-# answer = gets.chomp
-# case answer
-# 	when "yes", "y"
-#  		p '---------------------------------------------------------------------------------------'
-# 		start = Time.now
-#     Parser::Image.new.category_image
-# 		stop = Time.now
-# 		time  =  stop - start
-# 		min = ( time/60 ).to_i
-# 		sec = ( time - min*60 ).to_i
-# 		p "Operation took: #{ min } min #{ sec } sec!"
-# 		p '---------------------------------------------------------------------------------------'
-# 	else
-# 		"Ok, we go ahead!"
-# 	end
-
-
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p '-------------------------------------------------------------------------------------------'
-# p "Do you want to create IMAGES FOR PRODUCTS? yes/no"
-# answer = gets.chomp
-# case answer
-# 	when "yes", "y"
-#  		p '---------------------------------------------------------------------------------------'
-# 		start = Time.now
-#     Parser::Image.new.product_image
-# 		stop = Time.now
-# 		time  =  stop - start
-# 		min = ( time/60 ).to_i
-# 		sec = ( time - min*60 ).to_i
-# 		p "Operation took: #{ min } min #{ sec } sec!"
-# 		p '---------------------------------------------------------------------------------------'
-# 	else
-# 		"Ok, we go ahead!"
-# 	end
-
-# dirs = []
-# dirs << File.dirname("#{Rails.root}/public/categories/categories.log")
-# dirs << File.dirname("#{Rails.root}/public/categories_products/categories_products.log")
-# dirs << File.dirname("#{Rails.root}/public/image/image.log")
-# dirs << File.dirname("#{Rails.root}/public/image/category/image.log")
-# dirs << File.dirname("#{Rails.root}/public/image/products/image.log")
-# dirs << File.dirname("#{Rails.root}/public/products/products.log")
-# dirs.map do |dir|
-#   FileUtils.mkdir_p(dir) unless File.directory?(dir)
-# end

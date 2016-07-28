@@ -40,7 +40,7 @@ class ParsingController < AuthenticatedController
     
     def exists_login
         @login = Login.find(params[:login_id])
-        Product.new_with(@login)
+        Product.reconnect_new_with(@login)
         level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
         @all_categories = []
         level.map do |a|
@@ -93,6 +93,8 @@ class ParsingController < AuthenticatedController
     
     def finish_page
         unless Delayed::Job.count >= 1
+            vendor_id = Session.find_by(session_id: session.id).data['warden.user.vendor.key'][0][0]
+            @login = Login.where(vendor_id: vendor_id).last
             ParserProcess.new.delay.parse_categories_attach_and_create_objects(@login)
             # ParsAttachWorker.perform_async(@login.id)
         else
@@ -112,6 +114,5 @@ class ParsingController < AuthenticatedController
     
     def set_login
         @login = Login.find(current_vendor.logins.last.id)
-        # @login = Login.find(451)
     end
 end
