@@ -5,7 +5,15 @@ module Import
             #
             # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который 
             #
-            Reconnect.new_with(login)
+            
+            # Reconnect.new_with(login)
+            
+            current_shop = Shop.find_by( shopify_domain: login.target_url )
+            domain =current_shop.shopify_domain
+            token = current_shop.shopify_token
+            session = ShopifyAPI::Session.new(domain, token)
+            ShopifyAPI::Base.activate_session(session)
+            
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )
             if categories_for_creating.any?
                 categories_for_creating.map do |category|
@@ -20,7 +28,14 @@ module Import
                     begin
                         categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     rescue
-                        Reconnect.new_with(login)
+                        # Reconnect.new_with(login)
+                        
+                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                        domain =current_shop.shopify_domain
+                        token = current_shop.shopify_token
+                        session = ShopifyAPI::Session.new(domain, token)
+                        ShopifyAPI::Base.activate_session(session)
+                        
                         categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     end
                     categ.save
@@ -28,7 +43,14 @@ module Import
                         begin
                             img_cat = ShopifyAPI::CustomCollection.find(categ.id)
                         rescue    
-                            Reconnect.new_with(login)
+                            # Reconnect.new_with(login)
+                            
+                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                            domain =current_shop.shopify_domain
+                            token = current_shop.shopify_token
+                            session = ShopifyAPI::Session.new(domain, token)
+                            ShopifyAPI::Base.activate_session(session)
+                            
                             img_cat = ShopifyAPI::CustomCollection.find(categ.id)
                         end
                         img_cat.image = { 'src': "#{login.store_url}/media/catalog/category/#{src}" }
@@ -156,7 +178,14 @@ module Import
                         begin
                             exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                         rescue
-                            Reconnect.new_with(login)
+                            # Reconnect.new_with(login)
+                            
+                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                            domain =current_shop.shopify_domain
+                            token = current_shop.shopify_token
+                            session = ShopifyAPI::Session.new(domain, token)
+                            ShopifyAPI::Base.activate_session(session)
+                            
                             exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                         end
                         
@@ -167,14 +196,28 @@ module Import
                                     begin
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
                                     rescue
-                                        Reconnect.new_with(login)
+                                        # Reconnect.new_with(login)
+                                        
+                                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                        domain =current_shop.shopify_domain
+                                        token = current_shop.shopify_token
+                                        session = ShopifyAPI::Session.new(domain, token)
+                                        ShopifyAPI::Base.activate_session(session)
+                                        
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
                                     end
                                 else
                                     begin
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
                                     rescue
-                                        Reconnect.new_with(login)
+                                        # Reconnect.new_with(login)
+                                        
+                                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                        domain =current_shop.shopify_domain
+                                        token = current_shop.shopify_token
+                                        session = ShopifyAPI::Session.new(domain, token)
+                                        ShopifyAPI::Base.activate_session(session)
+                                        
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
                                     end
                                 end
@@ -185,7 +228,14 @@ module Import
                                 begin
                                     ip = ShopifyAPI::Product.find(id)
                                 rescue
-                                    Reconnect.new_with(login)
+                                    # Reconnect.new_with(login)
+                                    
+                                    current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                    domain =current_shop.shopify_domain
+                                    token = current_shop.shopify_token
+                                    session = ShopifyAPI::Session.new(domain, token)
+                                    ShopifyAPI::Base.activate_session(session)
+                                    
                                     ip = ShopifyAPI::Product.find(id)
                                 end
                             # images for product
@@ -272,7 +322,14 @@ module Import
                                                 p "Prod #{id} add to cat: #{shop_cat}"
                                             end
                                         rescue
-                                            Reconnect.new_with(login)
+                                            # Reconnect.new_with(login)
+                                            
+                                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                            domain =current_shop.shopify_domain
+                                            token = current_shop.shopify_token
+                                            session = ShopifyAPI::Session.new(domain, token)
+                                            ShopifyAPI::Base.activate_session(session)
+                                            
                                             if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                 ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
                                                 p "Prod #{id} add to cat: #{shop_cat}"
@@ -302,7 +359,14 @@ module Import
                                                 p "Prod #{a.id} add to cat: #{shop_cat} +"
                                              end
                                         rescue
-                                            Reconnect.new_with(login)
+                                            # Reconnect.new_with(login)
+                                            
+                                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                            domain =current_shop.shopify_domain
+                                            token = current_shop.shopify_token
+                                            session = ShopifyAPI::Session.new(domain, token)
+                                            ShopifyAPI::Base.activate_session(session)
+                                            
                                              if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                 ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
                                                 p "Prod #{a.id} add to cat: #{shop_cat} +"
@@ -315,7 +379,12 @@ module Import
                         end
                     rescue => error
                         p "Error with update product #{error}"
-                        Reconnect.new_with(login)
+                        # Reconnect.new_with(login)
+                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                        domain =current_shop.shopify_domain
+                        token = current_shop.shopify_token
+                        session = ShopifyAPI::Session.new(domain, token)
+                        ShopifyAPI::Base.activate_session(session)
                     end
                 # end
             # end
