@@ -53,6 +53,6 @@ class LoginController < ApplicationController
     end
     
     def login_params
-        params.require(:login).permit(:username, :key, :store_id,:store_url, :email )
+        params.require(:login).permit(:username, :key, :store_id,:store_url )
     end
 end

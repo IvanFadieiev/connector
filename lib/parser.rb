@@ -290,9 +290,15 @@ module Parser
 			end
 			
 			$all_products.map do |prod|
-				if Product.where(login_id: login.id, product_id: prod[:product_id]).blank?
+				prod_in_table = Product.where(login_id: login.id, product_id: prod[:product_id])
+				if prod_in_table.blank?
 					p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
 					p "Product with ID: #{p.id}  added to the table"
+				# else
+				# 	prod_in_table.map do |p|
+				# 		p.update_column(:login_id, login.id)
+				# 		p 'product login_id updated'
+				# 	end
 				end
 			end
 			$all_products = []
