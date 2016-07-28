@@ -2,7 +2,7 @@ class ParsingController < AuthenticatedController
     before_action :authenticate_vendor!
     before_filter :set_login, except: [:exists_login]
     # before_filter :activ_categories, only: [:category_product_join_table, :accepted_collection]
-    before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection]
+    before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection, :accepted_collection_exists]
     
     def category
         # byebug
@@ -63,6 +63,45 @@ class ParsingController < AuthenticatedController
     end
     
     def accepted_collection
+        @all_chosen_ids_for_categories = []
+        @all_categories.map do |array_category|
+            array_category.values[0].map do |category|
+                
+                # category.update_attributes(chosen: true)
+                
+                cat_id = category.category_id
+                param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
+                ids = params[param_shopify]
+                # #include?("-1") - флаг который показывает, что категорию скипаем
+                # in exist_logins we mast view last position of the where we want to import categories, that`s why we mast delete all collection
+                 # "-1" -- skip, "-2" -- as parent
+                unless ids.blank? || ids.include?("-2")
+                    ids.map do |shopify_category_id|
+                        @all_chosen_ids_for_categories << shopify_category_id
+                        param_magento = "#{cat_id}_magento_category_id".to_sym
+                        # exist_collection = Collection.where(
+                        #                                       shopify_category_id:  shopify_category_id,
+                        #                                       magento_category_id: params[param_magento],
+                        #                                       login_id: @login.id
+                        #                                       )
+                        
+                            Collection.create(
+                                              shopify_category_id:  shopify_category_id,
+                                              magento_category_id: params[param_magento],
+                                              login_id: @login.id
+                                              )
+                    end
+                end
+            end
+        end
+        unless @all_chosen_ids_for_categories.blank?
+            redirect_to finish_page_path and return
+        else
+            redirect_to category_product_join_table_path
+        end
+    end
+    
+        def accepted_collection_exists
         @all_chosen_ids_for_categories = []
         @all_categories.map do |array_category|
             array_category.values[0].map do |category|

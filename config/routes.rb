@@ -19,6 +19,7 @@ Rails.application.routes.draw do
   get  "category_product_join_table", to: "parsing#category_product_join_table"
   get  'check_categories_parsing',    to: 'parsing#check_categories_parsing'
   post 'accepted_collection',         to: 'parsing#accepted_collection'
+  post 'accepted_collection_exists',  to: 'parsing#accepted_collection_exists'
   get  'finish_page',                 to: 'parsing#finish_page'
   get  'exists_login/:login_id',      to: 'parsing#exists_login',               as: 'exists_login'
   get  'in_process',                  to: 'parsing#in_process'
