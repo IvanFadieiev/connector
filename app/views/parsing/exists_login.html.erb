@@ -12,7 +12,7 @@
                             <%= category[:name] %><br>
                             <%= hidden_field_tag "#{category[:category_id]}_magento_category_id", category[:category_id]%>
                             <%#= byebug %>
-                            <%= select_tag "#{category[:category_id]}_shopify_categories_ids[]", options_for_select([["- Create new category -", 0], ['- Skip -', -1]] + @shopify_collect.collect{ |u| [u.title, u.id] }, selected: Collection.where(login_id: @login.id, magento_category_id: category[:category_id]).map(&:shopify_category_id)), {:multiple => :multiple, rows: 8} %><br><br><br>
+                            <%= select_tag "#{category[:category_id]}_shopify_categories_ids[]", options_for_select([["- Create new category -", 0], ['- Skip -', -1], ['- As parent -', -2]] + @shopify_collect.collect{ |u| [u.title, u.id] }, selected: Collection.where(login_id: @login.id, magento_category_id: category[:category_id]).map(&:shopify_category_id)), {:multiple => :multiple, rows: 8} %><br><br><br>
                             
                             <%= @login.id if  Rails.env.development? %>
                         
