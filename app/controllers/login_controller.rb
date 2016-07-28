@@ -1,20 +1,28 @@
 class LoginController < ApplicationController
+    before_action :authenticate_vendor!
     before_filter :set_login, except: [:create]
     around_filter :shopify_session, only: :create
+
     def login
         @login = "login"
     end
     
     def create
-        @login = Login.new(login_params)
-        if @login.save
-            # create_dirs(@login.id)
-            @login.update_column(:target_url, ShopifyAPI::Shop.current.domain )
-            session[:login_id] = @login.id
-            savon_login(@login)
+        @exist_login = Login.find_by(target_url: ShopifyAPI::Shop.current.domain, vendor_id: current_vendor.id, store_id: params[:store_id])
+        if @exist_login.blank?
+            @login = Login.new(login_params)
+            if @login.save
+                @login.update_column(:vendor_id, current_vendor.id )
+                @login.update_column(:target_url, ShopifyAPI::Shop.current.domain )
+                session[:login_id] = @login.id
+                savon_login(@login)
+            else
+                flash.now[:notice] = "Sorry! Try again!"
+                render "home/index"
+            end
         else
-            flash.now[:notice] = "Sorry! Try again!"
-            render "home/index"
+            Parser::Login.new.login(@exist_login)
+            redirect_to exists_login_path(@exist_login)
         end
     end
     
@@ -41,10 +49,10 @@ class LoginController < ApplicationController
     end
     
     def set_login
-        @login = Login.find(session[:login_id])
+        @login = Login.find(current_vendor.logins.last.id)
     end
     
     def login_params
-        params.require(:login).permit(:username, :key, :store_id,:store_url, :email )
+        params.require(:login).permit(:username, :key, :store_id,:store_url )
     end
 end

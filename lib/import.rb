@@ -1,11 +1,19 @@
 module Import
     class CreateCategories < AuthenticatedController
-        extend ShopSession
+        # extend ShopSession
         def create(login)
             #
             # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который 
             #
-            CreateCategories.new_with(login)
+            
+            # Reconnect.new_with(login)
+            
+            current_shop = Shop.find_by( shopify_domain: login.target_url )
+            domain =current_shop.shopify_domain
+            token = current_shop.shopify_token
+            session = ShopifyAPI::Session.new(domain, token)
+            ShopifyAPI::Base.activate_session(session)
+            
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )
             if categories_for_creating.any?
                 categories_for_creating.map do |category|
@@ -20,7 +28,14 @@ module Import
                     begin
                         categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     rescue
-                        CreateCategories.new_with(login)
+                        # Reconnect.new_with(login)
+                        
+                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                        domain =current_shop.shopify_domain
+                        token = current_shop.shopify_token
+                        session = ShopifyAPI::Session.new(domain, token)
+                        ShopifyAPI::Base.activate_session(session)
+                        
                         categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     end
                     categ.save
@@ -28,7 +43,14 @@ module Import
                         begin
                             img_cat = ShopifyAPI::CustomCollection.find(categ.id)
                         rescue    
-                            CreateCategories.new_with(login)
+                            # Reconnect.new_with(login)
+                            
+                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                            domain =current_shop.shopify_domain
+                            token = current_shop.shopify_token
+                            session = ShopifyAPI::Session.new(domain, token)
+                            ShopifyAPI::Base.activate_session(session)
+                            
                             img_cat = ShopifyAPI::CustomCollection.find(categ.id)
                         end
                         img_cat.image = { 'src': "#{login.store_url}/media/catalog/category/#{src}" }
@@ -68,7 +90,7 @@ module Import
     end
     
     class   CreateProducts < AuthenticatedController
-        extend ShopSession
+        # extend ShopSession
         # def recursive( children_categories_1_lavel, category, login, data )
         #     ids = Collection.where(login_id: login.id).map(&:magento_category_id)
         #     unless children_categories_1_lavel.blank?
@@ -92,7 +114,7 @@ module Import
         # end
         
         # def create_products_to_shop(login)
-        #     CreateCategories.new_with(login)
+        #     Reconnect.new_with(login)
         #     ids = Collection.where(login_id: login.id).map(&:magento_category_id)
         #     created_categories = Collection.where( login_id: login.id ).order('id DESC').distinct
         #     created_categories.map do |category|
@@ -118,7 +140,10 @@ module Import
             categories_tree.map do |category_tree_ids|
                 target = Collection.find_by(magento_category_id: category_tree_ids[0], login_id: login.id)
                 category_tree_ids.each do |id|
-                    TargetCategoryImport.create( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id )
+                    # TargetCategoryImport.where( login_id: login.id).delete_all
+                    if TargetCategoryImport.find_by( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id ).blank?
+                        TargetCategoryImport.create( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id )
+                    end
                     p 'target created'
                 end
             end
@@ -127,170 +152,253 @@ module Import
         
         def create_products(login)
             $error_prod = []
-            Product.includes(:images, :magento_categories).where(login_id: login.id).uniq.map do |product|
-                begin
-                    # params for product
-                    unless product.description.include?("{:\"@xsi:type\"")
-                        body_html = product.description
-                    else
-                        body_html = ""
-                    end
-                    unless (product.price == nil)
-                        price = product.price.to_i
-                    else
-                        price = 0
-                    end
-                    handle        = product.url_key
-                    sku           = product.sku
-                    title      = product.name
-                    barcode       = product.ean
-                    status        = product.status
-                    weight        = product.weight
-                    special_price = product.special_price
-                    # для обновления продукта
+            # JoinTableCategoriesProduct.where(login_id: login.id).map(&:product_id).map do |prod_id|
+                # Product.where(login_id: login.id, product_id: prod_id).uniq.map do |product|
+                Product.includes(:images, :magento_categories).where(login_id: login.id).uniq.map do |product|
                     begin
-                        exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
-                    rescue
-                        CreateProducts.new_with(login)
-                        exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
-                    end
-                    
-                    if exist_products.blank?
-                        if product.shopify_product_id.blank?
-
-                            if status == "1"
-                                begin
-                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
-                                rescue
-                                    CreateProducts.new_with(login)
-                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
-                                end
-                            else
-                                begin
-                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
-                                rescue
-                                    CreateProducts.new_with(login)
-                                    shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
-                                end
-                            end
-                            shop_product.save
-                            id = shop_product.id
-                            p  "ADD PRODUCT: #{id}"
-                            # Product.find(product.id).update_column(:shopify_product_id, id)
-                            begin
-                                ip = ShopifyAPI::Product.find(id)
-                            rescue
-                                CreateProducts.new_with(login)
-                                ip = ShopifyAPI::Product.find(id)
-                            end
-                        # images for product
-                            begin
-                				arrr = $client.call(:call){ message( session:   $session,
-                												     method:    'catalog_product_attribute_media.list',
-                											         productId: product.product_id
-                													 )
-                											}.body[:call_response][:call_return][:item]
-                			rescue => e
-                			    p e
-                			    Parser::Login.new.login(login)
-                			    arrr = $client.call(:call){ message( session:   $session,
-                												     method:    'catalog_product_attribute_media.list',
-                											         productId: product.product_id
-                													 )
-                											}.body[:call_response][:call_return][:item]
-                			end
-            				images  = []
-            				if arrr.class == Hash
-            					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
-            				else
-            					unless arrr == nil
-            						arrr.map do |a| 
-            							a[:item].map do |b|
-            								images << b[:value] if ((b[:key] == "url") )
-            							end
-            						end
-            					end
-            				end
-            				if images.any?
-            					images.map do |img_url|
-            						$error2 = []
-            						begin
-            						unless img_url.blank?
-            							begin
-            								open(img_url)
-                                            begin
-                                                ip.images << { 'src': img_url }
-                                                ip.save
-                                            rescue
-                                                p "Image not found"
-                                            end        								
-            								p "Image for Product add to table #{img_url}"
-            							rescue
-            							 p 'don`t valid uri for image'	
-            							end
-            						else
-            							p "Product with ID: #{product_id} havn`t image"
-            						end
-            						rescue
-            							$error2 << img_url
-            							p '-----------------------Error($error2)---------------------------'
-            						end
-            					end
-            				end                        
+                        # params for product
+                        unless product.description.include?("{:\"@xsi:type\"")
+                            body_html = product.description
+                        else
+                            body_html = ""
+                        end
+                        unless (product.price == nil)
+                            price = product.price.to_i
+                        else
+                            price = 0
+                        end
+                        handle        = product.url_key
+                        sku           = product.sku
+                        title      = product.name
+                        barcode       = product.ean
+                        status        = product.status
+                        weight        = product.weight
+                        special_price = product.special_price
+                        # для обновления продукта
+                        begin
+                            exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
+                        rescue
+                            # Reconnect.new_with(login)
                             
-                            # images_for_product = product.images
-                            # unless images_for_product.blank?
-                            #     images_for_product.map do |image_line|
-                            #         begin
-                            #             src = image_line.img_url
-                            #             ip.images << { 'src': src }
-                            #             ip.save
-                            #         rescue
-                            #             p "Image not found"
-                            #         end
-                            #     end
-                            # end
+                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                            domain =current_shop.shopify_domain
+                            token = current_shop.shopify_token
+                            session = ShopifyAPI::Session.new(domain, token)
+                            ShopifyAPI::Base.activate_session(session)
                             
-                            
-                            
-                            if special_price == nil
-                                ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight )
-                            else
-                                ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight )
-                            end
-                            product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
-                                unless cat.target_category_import.blank?
-                                    shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
-                                    begin
-                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                        p "Prod #{id} add to cat: #{shop_cat}"
-                                    rescue
-                                        CreateProducts.new_with(login)
-                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                        p "Prod #{id} add to cat: #{shop_cat}"
-                                    end
-                                end
-                            end
-                            product.update_column(:shopify_product_id, id)
+                            exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                         end
                         
-                    #обновления продукта
-                    else
-                        exist_products.map do |a|
-                            if special_price == nil
-                                a.variants.first.update_attributes( 'price': price )
-                                p 'product updated'
-                            else
-                                a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price )
-                                p 'product updated'
+                        if exist_products.blank?
+                            if product.shopify_product_id.blank?
+    
+                                if status == "1"
+                                    begin
+                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                    rescue
+                                        # Reconnect.new_with(login)
+                                        
+                                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                        domain =current_shop.shopify_domain
+                                        token = current_shop.shopify_token
+                                        session = ShopifyAPI::Session.new(domain, token)
+                                        ShopifyAPI::Base.activate_session(session)
+                                        
+                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                    end
+                                else
+                                    begin
+                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                    rescue
+                                        # Reconnect.new_with(login)
+                                        
+                                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                        domain =current_shop.shopify_domain
+                                        token = current_shop.shopify_token
+                                        session = ShopifyAPI::Session.new(domain, token)
+                                        ShopifyAPI::Base.activate_session(session)
+                                        
+                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                    end
+                                end
+                                shop_product.save
+                                id = shop_product.id
+                                p  "ADD PRODUCT: #{id}"
+                                # Product.find(product.id).update_column(:shopify_product_id, id)
+                                begin
+                                    ip = ShopifyAPI::Product.find(id)
+                                rescue
+                                    # Reconnect.new_with(login)
+                                    
+                                    current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                    domain =current_shop.shopify_domain
+                                    token = current_shop.shopify_token
+                                    session = ShopifyAPI::Session.new(domain, token)
+                                    ShopifyAPI::Base.activate_session(session)
+                                    
+                                    ip = ShopifyAPI::Product.find(id)
+                                end
+                            # images for product
+                                begin
+                    				arrr = $client.call(:call){ message( session:   $session,
+                    												     method:    'catalog_product_attribute_media.list',
+                    											         productId: product.product_id
+                    													 )
+                    											}.body[:call_response][:call_return][:item]
+                    			rescue => e
+                    			    p e
+                    			    Parser::Login.new.login(login)
+                    			    arrr = $client.call(:call){ message( session:   $session,
+                    												     method:    'catalog_product_attribute_media.list',
+                    											         productId: product.product_id
+                    													 )
+                    											}.body[:call_response][:call_return][:item]
+                    			end
+                				images  = []
+                				if arrr.class == Hash
+                					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
+                				else
+                					unless arrr == nil
+                						arrr.map do |a| 
+                							a[:item].map do |b|
+                								images << b[:value] if ((b[:key] == "url") )
+                							end
+                						end
+                					end
+                				end
+                				if images.any?
+                					images.map do |img_url|
+                						$error2 = []
+                						begin
+                						unless img_url.blank?
+                							begin
+                								open(img_url)
+                                                begin
+                                                    ip.images << { 'src': img_url }
+                                                    ip.save
+                                                rescue
+                                                    p "Image not found"
+                                                end        								
+                								p "Image for Product add to table #{img_url}"
+                							rescue
+                							 p 'don`t valid uri for image'	
+                							end
+                						else
+                							p "Product with ID: #{product_id} havn`t image"
+                						end
+                						rescue
+                							$error2 << img_url
+                							p '-----------------------Error($error2)---------------------------'
+                						end
+                					end
+                				end                        
+                                
+                                # images_for_product = product.images
+                                # unless images_for_product.blank?
+                                #     images_for_product.map do |image_line|
+                                #         begin
+                                #             src = image_line.img_url
+                                #             ip.images << { 'src': src }
+                                #             ip.save
+                                #         rescue
+                                #             p "Image not found"
+                                #         end
+                                #     end
+                                # end
+                                
+                                
+                                
+                                if special_price == nil
+                                    ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight )
+                                else
+                                    ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight )
+                                end
+                                product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
+                                    unless cat.target_category_import.blank?
+                                        shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
+                                        begin
+                                            if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                                p "Prod #{id} add to cat: #{shop_cat}"
+                                            end
+                                        rescue
+                                            # Reconnect.new_with(login)
+                                            
+                                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                            domain =current_shop.shopify_domain
+                                            token = current_shop.shopify_token
+                                            session = ShopifyAPI::Session.new(domain, token)
+                                            ShopifyAPI::Base.activate_session(session)
+                                            
+                                            if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                                p "Prod #{id} add to cat: #{shop_cat}"
+                                            end                                            
+                                        end
+                                    end
+                                end
+                                product.update_column(:shopify_product_id, id)
+                            end
+                            
+                        #обновления продукта
+                        else
+                            exist_products.map do |a|
+                                if special_price == nil
+                                    a.variants.first.update_attributes( 'price': price )
+                                    p 'product updated'
+                                else
+                                    a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price )
+                                    p 'product updated'
+                                end
+                                product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
+                                    unless cat.target_category_import.blank?
+                                        shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
+                                        begin
+                                             if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
+                                                p "Prod #{a.id} add to cat: #{shop_cat} +"
+                                             end
+                                        rescue
+                                            # Reconnect.new_with(login)
+                                            
+                                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                            domain =current_shop.shopify_domain
+                                            token = current_shop.shopify_token
+                                            session = ShopifyAPI::Session.new(domain, token)
+                                            ShopifyAPI::Base.activate_session(session)
+                                            
+                                             if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
+                                                p "Prod #{a.id} add to cat: #{shop_cat} +"
+                                             end                                            
+                                        end
+                                    end
+                                end
+                                sleep 0.5
                             end
                         end
+                    rescue => error
+                        p "Error with update product #{error}"
+                        # Reconnect.new_with(login)
+                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                        domain =current_shop.shopify_domain
+                        token = current_shop.shopify_token
+                        session = ShopifyAPI::Session.new(domain, token)
+                        ShopifyAPI::Base.activate_session(session)
                     end
-                rescue => error
-                    p "Error with update product #{error}"
-                    CreateCategories.new_with(login)
-                end
+                # end
+            # end
             end
+        end
+    end
+    
+    class Reconnect
+        def self.new_with(login)
+            current_shop = Shop.find_by( shopify_domain: login.target_url )
+            domain =current_shop.shopify_domain
+            token = current_shop.shopify_token
+            session = ShopifyAPI::Session.new(domain, token)
+            ShopifyAPI::Base.activate_session(session)
         end
     end
 end

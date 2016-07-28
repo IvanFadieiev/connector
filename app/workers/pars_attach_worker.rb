@@ -1,5 +1,5 @@
 class ParsAttachWorker
-  include Sidekiq::Worker
+  # include Sidekiq::Worker
   def perform(id)
     login = Login.find(id)
     # login = Login.find(451)

@@ -1,4 +1,5 @@
 class ParserProcess
+    
     def parse_categories(login)
         # @login = login
         # login = Login.find(451)
@@ -8,7 +9,9 @@ class ParserProcess
     end
     
     def parse_categories_attach_and_create_objects(login)
-        # login = Login.find(1)
+        # login = Login.find(Session.find_by(session_id: session.id).data['warden.user.vendor.key'][0][0])
+        login = login
+    	JoinTableCategoriesProduct.where(login_id: login.id).delete_all unless JoinTableCategoriesProduct.where(login_id: login.id).blank?
         Parser::ProductList.new.create_join_table_categories_products(login)
         Parser::ProductList.new.create_product_table(login)
         Parser::Login.new.login( login )
@@ -16,8 +19,9 @@ class ParserProcess
         Import::CreateCategories.new.create(login)
         # sleep 10
         Import::CreateProducts.new.create_products_to_shop(login)
-        unless login.email.blank?
-            UserMailer.letter(login.email).deliver_now
+        email = Vendor.find(login.vendor_id).email
+        unless email.blank?
+            UserMailer.letter(email).deliver_now
         end
     end
 end

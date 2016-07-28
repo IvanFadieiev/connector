@@ -1,0 +1,8 @@
+<div class="side_panel">
+    <% if current_vendor %>
+        <%= link_to('LogOut User', destroy_vendor_session_path, :method => :delete) %><br><br>
+        <%= link_to "LogOut Shop", logout_path %>
+    <%# else %>
+        <%#= link_to('LogIn User', new_vendor_session_path) %>
+    <% end %>
+</div>

@@ -11,7 +11,10 @@
   <% end %>
 <div class="container">
   <div class = "row">
-    <div class="col-md-4 col-md-offset-4">
+    <div class="col-md-4">
+       <%= render partial: 'layouts/current_vendor_logins' %>
+    </div>
+    <div class="col-md-4">
       <%= simple_form_for @login do |f| %>
         <%= f.label "Magento store URL*" %>:<br />
         <%= f.text_field :store_url, placeholder: "Store URL" %><br />
@@ -23,15 +26,14 @@
         <%= f.password_field :key, placeholder: "SOAP API Key" %><br />
         
         <%= f.label "Magento category ID*" %>:<br />
-        <%= f.text_field :store_id, placeholder: "Magento category ID" %><br />
+        <%= f.text_field :store_id, placeholder: "Magento category ID" %><br /><br />
       
-        <%= f.label "Email:" %><br />
-        <%= f.text_field :email, placeholder: "Email" %><br /><br />
+        <%#= f.label "Email:" %>
+        <%#= f.text_field :email, placeholder: "Email" %>
         
         <%= f.submit %>
       <% end %>
       <br><br>
-      <center>Leave current shop: <%= link_to "Logout", logout_path %></center><br>
     </div>
   </div>
 </div>
@@ -48,3 +50,6 @@
     
   </center>
 <% end %>
+<%# session[:deech] = true %>
+<%# session[:session_id]%>
+<%#byebug%>
