@@ -39,27 +39,19 @@ class ParsingController < AuthenticatedController
     end
     
     def exists_login
-        @login = Login.find(params[:login_id])
-        Product.reconnect_new_with(@login)
-        level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
-        @all_categories = []
-        level.map do |a|
-            @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
+        unless Delayed::Job.count >= 1
+            @login = Login.find(params[:login_id])
+            Product.reconnect_new_with(@login)
+            level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
+            @all_categories = []
+            level.map do |a|
+                @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
+            end
+            @collection = Collection.new
+            @shopify_collect = ShopifyAPI::CustomCollection.all
+        else
+           redirect_to  in_process_path
         end
-        @collection = Collection.new
-        @shopify_collect = ShopifyAPI::CustomCollection.all
-    end
-    
-    def exists_login
-        @login = Login.find(params[:login_id])
-        Product.reconnect_new_with(@login)
-        level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
-        @all_categories = []
-        level.map do |a|
-            @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
-        end
-        @collection = Collection.new
-        @shopify_collect = ShopifyAPI::CustomCollection.all
     end
     
     def accepted_collection

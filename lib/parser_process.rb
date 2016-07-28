@@ -11,7 +11,6 @@ class ParserProcess
     def parse_categories_attach_and_create_objects(login)
         # login = Login.find(Session.find_by(session_id: session.id).data['warden.user.vendor.key'][0][0])
         login = login
-    	JoinTableCategoriesProduct.where(login_id: login.id).delete_all unless JoinTableCategoriesProduct.where(login_id: login.id).blank?
         Parser::ProductList.new.create_join_table_categories_products(login)
         Parser::ProductList.new.create_product_table(login)
         Parser::Login.new.login( login )
