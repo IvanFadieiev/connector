@@ -14,7 +14,7 @@ class LoginController < ApplicationController
                 @login = Login.new(login_params)
                 if @login.save
                     @login.update_column(:vendor_id, current_vendor.id )
-                    @login.update_column(:target_url, ShopifyAPI::Shop.current.domain )
+                    @login.update_column(:target_url, ShopifyAPI::Shop.current.myshopify_domain )
                     session[:login_id] = @login.id
                     savon_login(@login)
                 else

@@ -3,11 +3,8 @@ module Import
         # extend ShopSession
         def create(login)
             #
-            # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который 
-            domain = "magic-streetwear.myshopify.com"
-            token = "9de6ff262c083f364e28980349ca685a"
-            session = ShopifyAPI::Session.new(domain, token)
-            ShopifyAPI::Base.activate_session(session)
+            # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который
+            Auth.shopify
             
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )
             if categories_for_creating.any?
@@ -26,10 +23,7 @@ module Import
                         # Reconnect.new_with(login)
                         
                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                        domain = "magic-streetwear.myshopify.com"
-                        token = "9de6ff262c083f364e28980349ca685a"
-                        session = ShopifyAPI::Session.new(domain, token)
-                        ShopifyAPI::Base.activate_session(session)
+                        Auth.shopify
                         
                         categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     end
@@ -41,10 +35,7 @@ module Import
                             # Reconnect.new_with(login)
                             
                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                            domain = "magic-streetwear.myshopify.com"
-                            token = "9de6ff262c083f364e28980349ca685a"
-                            session = ShopifyAPI::Session.new(domain, token)
-                            ShopifyAPI::Base.activate_session(session)
+                            Auth.shopify
                             
                             img_cat = ShopifyAPI::CustomCollection.find(categ.id)
                         end
@@ -97,7 +88,6 @@ module Import
         #         # создать TargetCategoryImport для каждого из $children_categories_2_lavel
         #         unless children_categories_2_lavel.blank?
         #             children_categories_2_lavel.uniq.map do |children|
-        #                 unless ids.include?(category.magento_category_id)
         #                     TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
         #                 end
         #             end
@@ -176,10 +166,7 @@ module Import
                             # Reconnect.new_with(login)
                             
                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                            domain = "magic-streetwear.myshopify.com"
-                            token = "9de6ff262c083f364e28980349ca685a"
-                            session = ShopifyAPI::Session.new(domain, token)
-                            ShopifyAPI::Base.activate_session(session)
+                            Auth.shopify
                             
                             exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                         end
@@ -196,10 +183,7 @@ module Import
                                         # Reconnect.new_with(login)
                                         
                                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                        domain = "magic-streetwear.myshopify.com"
-                                        token = "9de6ff262c083f364e28980349ca685a"
-                                        session = ShopifyAPI::Session.new(domain, token)
-                                        ShopifyAPI::Base.activate_session(session)
+                                        Auth.shopify
                                         
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
                                     end
@@ -214,10 +198,7 @@ module Import
                                         # Reconnect.new_with(login)
                                         
                                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                        domain = "magic-streetwear.myshopify.com"
-                                        token = "9de6ff262c083f364e28980349ca685a"
-                                        session = ShopifyAPI::Session.new(domain, token)
-                                        ShopifyAPI::Base.activate_session(session)
+                                        Auth.shopify
                                         
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
                                         counter = login.counter + 1
@@ -234,10 +215,7 @@ module Import
                                     # Reconnect.new_with(login)
                                     
                                     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                    domain = "magic-streetwear.myshopify.com"
-                                    token = "9de6ff262c083f364e28980349ca685a"
-                                    session = ShopifyAPI::Session.new(domain, token)
-                                    ShopifyAPI::Base.activate_session(session)
+                                    Auth.shopify
                                     
                                     ip = ShopifyAPI::Product.find(id)
                                 end
@@ -328,10 +306,7 @@ module Import
                                             # Reconnect.new_with(login)
                                             
                                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                            domain = "magic-streetwear.myshopify.com"
-                                            token = "9de6ff262c083f364e28980349ca685a"
-                                            session = ShopifyAPI::Session.new(domain, token)
-                                            ShopifyAPI::Base.activate_session(session)
+                                            Auth.shopify
                                             
                                             if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                 ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
@@ -369,10 +344,7 @@ module Import
                                             # Reconnect.new_with(login)
                                             
                                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                            domain = "magic-streetwear.myshopify.com"
-                                            token = "9de6ff262c083f364e28980349ca685a"
-                                            session = ShopifyAPI::Session.new(domain, token)
-                                            ShopifyAPI::Base.activate_session(session)
+                                            Auth.shopify
                                             
                                              if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                 ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
@@ -388,10 +360,7 @@ module Import
                         p "Error with update product #{error}"
                         # Reconnect.new_with(login)
                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                        domain = "magic-streetwear.myshopify.com"
-                        token = "9de6ff262c083f364e28980349ca685a"
-                        session = ShopifyAPI::Session.new(domain, token)
-                        ShopifyAPI::Base.activate_session(session)
+                        Auth.shopify
                     end
                 # end
             # end
@@ -402,10 +371,7 @@ module Import
     class Reconnect
         def self.new_with(login)
             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-            domain = "magic-streetwear.myshopify.com"
-            token = "9de6ff262c083f364e28980349ca685a"
-            session = ShopifyAPI::Session.new(domain, token)
-            ShopifyAPI::Base.activate_session(session)
+            Auth.shopify
         end
     end
 end

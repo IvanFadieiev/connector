@@ -41,7 +41,7 @@ class ParsingController < AuthenticatedController
     def exists_login
         unless Delayed::Job.count >= 1
             @login = Login.find(params[:login_id])
-            Product.reconnect_new_with(@login)
+            Auth.shopify
             level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
             @all_categories = []
             level.map do |a|
