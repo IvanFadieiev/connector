@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160729082708) do
+ActiveRecord::Schema.define(version: 20160729092151) do
 
   create_table "categories", force: :cascade do |t|
     t.integer  "category_id", limit: 4
@@ -69,17 +69,18 @@ ActiveRecord::Schema.define(version: 20160729082708) do
   add_index "join_table_categories_products", ["product_id"], name: "index_join_table_categories_products_on_product_id", using: :btree
 
   create_table "logins", force: :cascade do |t|
-    t.string   "username",          limit: 255
-    t.string   "key",               limit: 255
-    t.integer  "store_id",          limit: 4
-    t.datetime "created_at",                                    null: false
-    t.datetime "updated_at",                                    null: false
-    t.string   "store_url",         limit: 255
-    t.boolean  "categories_parsed",             default: false
-    t.string   "target_url",        limit: 255
-    t.string   "email",             limit: 255
-    t.integer  "vendor_id",         limit: 4
-    t.integer  "counter",           limit: 4
+    t.string   "username",              limit: 255
+    t.string   "key",                   limit: 255
+    t.integer  "store_id",              limit: 4
+    t.datetime "created_at",                                        null: false
+    t.datetime "updated_at",                                        null: false
+    t.string   "store_url",             limit: 255
+    t.boolean  "categories_parsed",                 default: false
+    t.string   "target_url",            limit: 255
+    t.string   "email",                 limit: 255
+    t.integer  "vendor_id",             limit: 4
+    t.integer  "counter",               limit: 4
+    t.integer  "magento_product_count", limit: 4
   end
 
   add_index "logins", ["vendor_id"], name: "index_logins_on_vendor_id", using: :btree
