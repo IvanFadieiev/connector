@@ -9,6 +9,7 @@ class ParserProcess
     end
     
     def parse_categories_attach_and_create_objects(login)
+        login.update_column( :counter, 0 )
         # login = Login.find(Session.find_by(session_id: session.id).data['warden.user.vendor.key'][0][0])
         login = login
         Parser::ProductList.new.create_join_table_categories_products(login)

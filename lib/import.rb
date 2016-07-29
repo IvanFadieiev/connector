@@ -8,7 +8,7 @@ module Import
             
             # Reconnect.new_with(login)
             
-            current_shop = Shop.find_by( shopify_domain: login.target_url )
+            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
             domain =current_shop.shopify_domain
             token = current_shop.shopify_token
             session = ShopifyAPI::Session.new(domain, token)
@@ -30,7 +30,7 @@ module Import
                     rescue
                         # Reconnect.new_with(login)
                         
-                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                         domain =current_shop.shopify_domain
                         token = current_shop.shopify_token
                         session = ShopifyAPI::Session.new(domain, token)
@@ -45,7 +45,7 @@ module Import
                         rescue    
                             # Reconnect.new_with(login)
                             
-                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                             domain =current_shop.shopify_domain
                             token = current_shop.shopify_token
                             session = ShopifyAPI::Session.new(domain, token)
@@ -180,7 +180,7 @@ module Import
                         rescue
                             # Reconnect.new_with(login)
                             
-                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                             domain =current_shop.shopify_domain
                             token = current_shop.shopify_token
                             session = ShopifyAPI::Session.new(domain, token)
@@ -193,12 +193,14 @@ module Import
                             if product.shopify_product_id.blank?
     
                                 if status == "1"
+                                    counter = login.counter + 1
+                                    login.update_column( :counter, counter )
                                     begin
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
                                     rescue
                                         # Reconnect.new_with(login)
                                         
-                                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                                         domain =current_shop.shopify_domain
                                         token = current_shop.shopify_token
                                         session = ShopifyAPI::Session.new(domain, token)
@@ -207,18 +209,24 @@ module Import
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
                                     end
                                 else
+                                    counter = login.counter + 1
+                                    login.update_column( :counter, counter )
                                     begin
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                        counter = login.counter + 1
+                                        login.update_column( :counter, counter )
                                     rescue
                                         # Reconnect.new_with(login)
                                         
-                                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                                         domain =current_shop.shopify_domain
                                         token = current_shop.shopify_token
                                         session = ShopifyAPI::Session.new(domain, token)
                                         ShopifyAPI::Base.activate_session(session)
                                         
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                        counter = login.counter + 1
+                                        login.update_column( :counter, counter )
                                     end
                                 end
                                 shop_product.save
@@ -230,7 +238,7 @@ module Import
                                 rescue
                                     # Reconnect.new_with(login)
                                     
-                                    current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                    current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                                     domain =current_shop.shopify_domain
                                     token = current_shop.shopify_token
                                     session = ShopifyAPI::Session.new(domain, token)
@@ -324,7 +332,7 @@ module Import
                                         rescue
                                             # Reconnect.new_with(login)
                                             
-                                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                                             domain =current_shop.shopify_domain
                                             token = current_shop.shopify_token
                                             session = ShopifyAPI::Session.new(domain, token)
@@ -344,9 +352,13 @@ module Import
                         else
                             exist_products.map do |a|
                                 if special_price == nil
+                                    counter = login.counter + 1
+                                    login.update_column( :counter, counter )
                                     a.variants.first.update_attributes( 'price': price )
                                     p 'product updated'
                                 else
+                                    counter = login.counter + 1
+                                    login.update_column( :counter, counter )
                                     a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price )
                                     p 'product updated'
                                 end
@@ -361,7 +373,7 @@ module Import
                                         rescue
                                             # Reconnect.new_with(login)
                                             
-                                            current_shop = Shop.find_by( shopify_domain: login.target_url )
+                                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                                             domain =current_shop.shopify_domain
                                             token = current_shop.shopify_token
                                             session = ShopifyAPI::Session.new(domain, token)
@@ -380,7 +392,7 @@ module Import
                     rescue => error
                         p "Error with update product #{error}"
                         # Reconnect.new_with(login)
-                        current_shop = Shop.find_by( shopify_domain: login.target_url )
+                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
                         domain =current_shop.shopify_domain
                         token = current_shop.shopify_token
                         session = ShopifyAPI::Session.new(domain, token)
@@ -394,7 +406,7 @@ module Import
     
     class Reconnect
         def self.new_with(login)
-            current_shop = Shop.find_by( shopify_domain: login.target_url )
+            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
             domain =current_shop.shopify_domain
             token = current_shop.shopify_token
             session = ShopifyAPI::Session.new(domain, token)
