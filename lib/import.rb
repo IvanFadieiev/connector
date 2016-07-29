@@ -8,7 +8,7 @@ module Import
             
             # Reconnect.new_with(login)
             
-            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+            current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
             domain =current_shop.shopify_domain
             token = current_shop.shopify_token
             session = ShopifyAPI::Session.new(domain, token)
@@ -30,7 +30,7 @@ module Import
                     rescue
                         # Reconnect.new_with(login)
                         
-                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                        current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                         domain =current_shop.shopify_domain
                         token = current_shop.shopify_token
                         session = ShopifyAPI::Session.new(domain, token)
@@ -45,7 +45,7 @@ module Import
                         rescue    
                             # Reconnect.new_with(login)
                             
-                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                            current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                             domain =current_shop.shopify_domain
                             token = current_shop.shopify_token
                             session = ShopifyAPI::Session.new(domain, token)
@@ -180,7 +180,7 @@ module Import
                         rescue
                             # Reconnect.new_with(login)
                             
-                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                            current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                             domain =current_shop.shopify_domain
                             token = current_shop.shopify_token
                             session = ShopifyAPI::Session.new(domain, token)
@@ -200,7 +200,7 @@ module Import
                                     rescue
                                         # Reconnect.new_with(login)
                                         
-                                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                                        current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                         domain =current_shop.shopify_domain
                                         token = current_shop.shopify_token
                                         session = ShopifyAPI::Session.new(domain, token)
@@ -218,7 +218,7 @@ module Import
                                     rescue
                                         # Reconnect.new_with(login)
                                         
-                                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                                        current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                         domain =current_shop.shopify_domain
                                         token = current_shop.shopify_token
                                         session = ShopifyAPI::Session.new(domain, token)
@@ -238,7 +238,7 @@ module Import
                                 rescue
                                     # Reconnect.new_with(login)
                                     
-                                    current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                                    current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                     domain =current_shop.shopify_domain
                                     token = current_shop.shopify_token
                                     session = ShopifyAPI::Session.new(domain, token)
@@ -332,7 +332,7 @@ module Import
                                         rescue
                                             # Reconnect.new_with(login)
                                             
-                                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                                            current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                             domain =current_shop.shopify_domain
                                             token = current_shop.shopify_token
                                             session = ShopifyAPI::Session.new(domain, token)
@@ -373,7 +373,7 @@ module Import
                                         rescue
                                             # Reconnect.new_with(login)
                                             
-                                            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                                            current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                             domain =current_shop.shopify_domain
                                             token = current_shop.shopify_token
                                             session = ShopifyAPI::Session.new(domain, token)
@@ -392,7 +392,7 @@ module Import
                     rescue => error
                         p "Error with update product #{error}"
                         # Reconnect.new_with(login)
-                        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+                        current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                         domain =current_shop.shopify_domain
                         token = current_shop.shopify_token
                         session = ShopifyAPI::Session.new(domain, token)
@@ -406,7 +406,7 @@ module Import
     
     class Reconnect
         def self.new_with(login)
-            current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+            current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
             domain =current_shop.shopify_domain
             token = current_shop.shopify_token
             session = ShopifyAPI::Session.new(domain, token)

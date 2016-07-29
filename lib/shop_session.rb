@@ -1,7 +1,7 @@
 module ShopSession
     # create connect to shopify shop
     def reconnect_new_with(login)
-        current_shop = Shop.find_by( shopify_domain: ENV['TARGET_URL'] )
+        current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
         domain =current_shop.shopify_domain
         token = current_shop.shopify_token
         session = ShopifyAPI::Session.new(domain, token)
