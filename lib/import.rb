@@ -4,12 +4,6 @@ module Import
         def create(login)
             #
             # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который 
-            #
-            
-            # Reconnect.new_with(login)
-            
-            # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-            
             domain = "magic-streetwear.myshopify.com"
             token = "9de6ff262c083f364e28980349ca685a"
             session = ShopifyAPI::Session.new(domain, token)

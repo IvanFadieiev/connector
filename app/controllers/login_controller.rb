@@ -9,8 +9,8 @@ class LoginController < ApplicationController
     
     def create
         unless Delayed::Job.count >= 1
-            @exist_login = Login.find_by(target_url: ShopifyAPI::Shop.current.domain, vendor_id: current_vendor.id, store_id: params[:store_id])
-            if @exist_login.blank?
+            # @exist_login = Login.find_by(target_url: ShopifyAPI::Shop.current.domain, vendor_id: current_vendor.id, store_id: params[:store_id])
+            # if @exist_login.blank?
                 @login = Login.new(login_params)
                 if @login.save
                     @login.update_column(:vendor_id, current_vendor.id )
@@ -21,10 +21,10 @@ class LoginController < ApplicationController
                     flash.now[:notice] = "Sorry! Try again!"
                     render "home/index"
                 end
-            else
-                Parser::Login.new.login(@exist_login)
-                redirect_to exists_login_path(@exist_login)
-            end
+            # else
+            #     Parser::Login.new.login(@exist_login)
+            #     redirect_to exists_login_path(@exist_login)
+            # end
         else
            redirect_to  in_process_path
         end
