@@ -219,91 +219,106 @@ module Parser
 			$error_with_creating_product_table = []
 			parsed_data = JoinTableCategoriesProduct.where(login_id: login.id).map{ |a| a.product_id }
 			array_uniq_products_ids = parsed_data.uniq
-			$custom_attr = [
-											'modelsize',
-											'size',
-											'size_a',
-											'size_b',
-											'size_c',
-											'size_d',
-											'size_e',
-											'size_f',
-											'size_g',
-											'size_h',
-											'size_j'
-										]
-			$column_names = [
-											'product_id',
-											'type',
-											'sku',
-											'name',
-											'ean',
-											'description',
-											'price',
-											'special_price',
-											'special_from_date',
-											'special_to_date',
-											'url_key',
-											'image',
-											'color',
-											'status',
-											'weight',
-											'set'
-											]
-			$all_products = []
-			$products_with_errors = []
+			# $custom_attr = [
+			# 								'modelsize',
+			# 								'size',
+			# 								'size_a',
+			# 								'size_b',
+			# 								'size_c',
+			# 								'size_d',
+			# 								'size_e',
+			# 								'size_f',
+			# 								'size_g',
+			# 								'size_h',
+			# 								'size_j'
+			# 							]
+			# $column_names = [
+			# 								'product_id',
+			# 								'type',
+			# 								'sku',
+			# 								'name',
+			# 								'ean',
+			# 								'description',
+			# 								'price',
+			# 								'special_price',
+			# 								'special_from_date',
+			# 								'special_to_date',
+			# 								'url_key',
+			# 								'image',
+			# 								'color',
+			# 								'status',
+			# 								'weight',
+			# 								'set'
+			# 								]
+			# $all_products = []
+			# $products_with_errors = []
 			count = array_uniq_products_ids.count
 			array_uniq_products_ids.map do |product_id|
 				begin
 					begin
-						arrr = $client.call( :call ){ message( session: $session,
-																  method: 'catalog_product.info',
-																  productId: product_id
-																  ) }.body[:call_response][:call_return][:item]			
+						# arrr = $client.call( :call ){ message( session: $session,
+						# 										  method: 'catalog_product.info',
+						# 										  productId: product_id
+						# 										  ) }.body[:call_response][:call_return][:item]			
+						prod = $client.call(:catalog_product_info, message: {session_id: $session, product_id: product_id , store_view: login.store_id }).body[:catalog_product_info_response][:info]
 					rescue
-						Parser::Login.new.login(login)
-						arrr = $client.call( :call ){ message( session: $session,
-																	  method: 'catalog_product.info',
-																	  productId: product_id
-																	  ) }.body[:call_response][:call_return][:item]
-					end					
-					Parser.new_array_with_object(arrr, $column_names, login)
-					attr_hash = {}
-					arrr_keys = arrr.map{|a| a[:key]}
-					$custom_attr.map do |key|
-						if arrr_keys.include?(key)
-							arrr.map do |obj_attr_hash|
-								if obj_attr_hash[:key] == key
-									attr_hash.merge!('size'.to_sym => obj_attr_hash[:value])
-								end
-							end
-						end
+						# Parser::Login.new.login(login)
+						# arrr = $client.call( :call ){ message( session: $session,
+						# 											  method: 'catalog_product.info',
+						# 											  productId: product_id
+						# 											  ) }.body[:call_response][:call_return][:item]
+						AuthSavon.connect( login )
+						prod = $client.call(:catalog_product_info, message: {session_id: $session, product_id: product_id , store_view: login.store_id }).body[:catalog_product_info_response][:info]
 					end
-					$hash.merge!(attr_hash)
-					# p "Add product with ID: #{arrr[0][:value]}"
-					p "Left #{count+= -1} prod"
-					# p '------------------------------------------------------------------------'
-					$all_products << $hash
+					
+					# $all_products.map do |prod|
+						prod_in_table = Product.where(login_id: login.id, product_id: prod[:product_id])
+						if prod_in_table.blank?
+							magento_product_count = login.magento_product_count
+							login.update_column( :magento_product_count, magento_product_count + 1 )
+							p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
+							p "Product with ID: #{p.id}  added to the table"
+							p "Left #{count+= -1} prod"
+						end
+					# end
+					# Parser.new_array_with_object(arrr, $column_names, login)
+					# attr_hash = {}
+					# arrr_keys = arrr.map{|a| a[:key]}
+					# $custom_attr.map do |key|
+					# 	if arrr_keys.include?(key)
+					# 		arrr.map do |obj_attr_hash|
+					# 			if obj_attr_hash[:key] == key
+					# 				attr_hash.merge!('size'.to_sym => obj_attr_hash[:value])
+					# 			end
+					# 		end
+					# 	end
+					# end
+					# $hash.merge!(attr_hash)
+					# # p "Add product with ID: #{arrr[0][:value]}"
+					# p "Left #{count+= -1} prod"
+					# # p '------------------------------------------------------------------------'
+					# $all_products << $hash
 				rescue
-					$products_with_errors << $hash
+					# $products_with_errors << $hash
+					p 'product with error'
 				end
 			end
 			
-			$all_products.map do |prod|
-				prod_in_table = Product.where(login_id: login.id, product_id: prod[:product_id])
-				if prod_in_table.blank?
-					magento_product_count = login.magento_product_count
-					login.update_column( :magento_product_count, magento_product_count + 1 )
-					p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
-					p "Product with ID: #{p.id}  added to the table"
-				# else
-				# 	prod_in_table.map do |p|
-				# 		p.update_column(:login_id, login.id)
-				# 		p 'product login_id updated'
-				# 	end
-				end
-			end
-			$all_products = []
+			# $all_products.map do |prod|
+			# 	prod_in_table = Product.where(login_id: login.id, product_id: prod[:product_id])
+			# 	if prod_in_table.blank?
+			# 		magento_product_count = login.magento_product_count
+			# 		login.update_column( :magento_product_count, magento_product_count + 1 )
+			# 		p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
+			# 		p "Product with ID: #{p.id}  added to the table"
+			# 	# else
+			# 	# 	prod_in_table.map do |p|
+			# 	# 		p.update_column(:login_id, login.id)
+			# 	# 		p 'product login_id updated'
+			# 	# 	end
+			# 	end
+			# end
+			# $all_products = []
 		end
 
 		def info_soap_product(product_id)
