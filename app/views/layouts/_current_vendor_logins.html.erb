@@ -1,7 +1,7 @@
 <% if current_vendor %>
   <% unless current_vendor.logins.blank? %>
     <h4>If you want to continue last import, click to the link:</h4>
-    <% login = current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.domain ).last %>
+    <% login = current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.myshopify_domain ).last %>
     <% if login %>
       <%= link_to "#{login.target_url}", exists_login_path(login) %> with category id: <%= login.store_id %><br>
     <% end %>
