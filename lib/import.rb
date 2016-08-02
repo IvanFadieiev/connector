@@ -4,17 +4,44 @@ module Import
         def create(login)
             #
             # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который
-            Auth.shopify
+            Auth.shopify(login)
             
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )
             if categories_for_creating.any?
                 categories_for_creating.map do |category|
                     find_category = Category.where("login_id LIKE ? AND category_id LIKE ? ", login.id, category.magento_category_id)
+
+
+
+        			client  = Savon.client( wsdl: login.store_url + '/api/?wsdl' )
+        			request = client.call( :login, message:{ magento_username: login.username, key: login.key})
+        			session = request.body[:login_response][:login_return]
+    				if find_category[0].description == nil
+    					response = client.call(:call){message(:session => session, :method=> 'catalog_category.info', categoryId: category.magento_category_id)}.body[:call_response][:call_return][:item]
+    					# byebug
+    					desc = []
+    					response.map{|a| desc << a if (a[:key] == 'description')}
+    					description = desc[0][:value]
+    					img = []
+    					response.map{|a| img << a if (a[:key] == 'image')}
+    					image = img[0][:value]
+    					find_category[0].update_columns( description: description, image: image )
+    				end
+        			
+        			
+        			
+        			
+        			
+        			
                     title = find_category[0][:name]
-                    unless find_category[0][:description].include?("{")
-                        body_html = find_category[0].description
+                    unless find_category[0][:description] == nil
+                        unless find_category[0][:description].include?("{")
+                            body_html = find_category[0].description
+                        else
+                            body_html = nil
+                        end
                     else
-                        body_html = nil
+                         body_html = nil
                     end
                     src = find_category[0].image
                     begin
@@ -23,7 +50,7 @@ module Import
                         # Reconnect.new_with(login)
                         
                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                        Auth.shopify
+                         Auth.shopify(login)
                         
                         categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     end
@@ -35,7 +62,7 @@ module Import
                             # Reconnect.new_with(login)
                             
                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                            Auth.shopify
+                            Auth.shopify(login)
                             
                             img_cat = ShopifyAPI::CustomCollection.find(categ.id)
                         end
@@ -142,11 +169,13 @@ module Import
                 Product.includes(:images, :magento_categories).where(login_id: login.id).uniq.map do |product|
                     begin
                         # params for product
-                        unless product.description.include?("{:\"@xsi:type\"")
-                            body_html = product.description
-                        else
-                            body_html = ""
-                        end
+                        unless product.description == nil
+                            unless product.description.include?("{:\"@xsi:type\"")
+                                body_html = product.description
+                            else
+                                body_html = ""
+                            end
+                        end    
                         unless (product.price == nil)
                             price = product.price.to_i
                         else
@@ -166,7 +195,7 @@ module Import
                             # Reconnect.new_with(login)
                             
                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                            Auth.shopify
+                             Auth.shopify(login)
                             
                             exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                         end
@@ -183,7 +212,7 @@ module Import
                                         # Reconnect.new_with(login)
                                         
                                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                        Auth.shopify
+                                         Auth.shopify(login)
                                         
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
                                     end
@@ -198,7 +227,7 @@ module Import
                                         # Reconnect.new_with(login)
                                         
                                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                        Auth.shopify
+                                         Auth.shopify(login)
                                         
                                         shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
                                         counter = login.counter + 1
@@ -215,7 +244,7 @@ module Import
                                     # Reconnect.new_with(login)
                                     
                                     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                    Auth.shopify
+                                     Auth.shopify(login)
                                     
                                     ip = ShopifyAPI::Product.find(id)
                                 end
@@ -306,7 +335,7 @@ module Import
                                             # Reconnect.new_with(login)
                                             
                                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                            Auth.shopify
+                                             Auth.shopify(login)
                                             
                                             if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                 ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
@@ -315,6 +344,20 @@ module Import
                                         end
                                     end
                                 end
+# _--____--__---------___--
+        # if ip.images.blank?
+        #     title = ip.title
+        #     begin
+        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+        #         prod.save
+        #     rescue
+        #         Auth.shopify(login)
+        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+        #         prod.save
+        #     end
+        # end
                                 product.update_column(:shopify_product_id, id)
                             end
                             
@@ -344,7 +387,7 @@ module Import
                                             # Reconnect.new_with(login)
                                             
                                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                            Auth.shopify
+                                             Auth.shopify(login)
                                             
                                              if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                 ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
@@ -353,6 +396,21 @@ module Import
                                         end
                                     end
                                 end
+        # if a.images.blank?
+        #     title = a.title
+        #     begin
+        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+        #         prod.save
+        #         p 'updated scope'
+        #     rescue
+        #         Auth.shopify(login)
+        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+        #         prod.save
+        #         p 'updated scope'
+        #     end
+        # end
                                 sleep 0.5
                             end
                         end
@@ -360,7 +418,7 @@ module Import
                         p "Error with update product #{error}"
                         # Reconnect.new_with(login)
                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                        Auth.shopify
+                         Auth.shopify(login)
                     end
                 # end
             # end
@@ -371,7 +429,7 @@ module Import
     class Reconnect
         def self.new_with(login)
             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-            Auth.shopify
+             Auth.shopify(login)
         end
     end
 end

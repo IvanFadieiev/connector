@@ -40,8 +40,9 @@ class ParsingController < AuthenticatedController
     
     def exists_login
         unless Delayed::Job.count >= 1
-            @login = Login.find(params[:login_id])
-            Auth.shopify
+            # @login = Login.find(params[:login_id])
+            @login = current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.myshopify_domain).last
+            Auth.shopify(@login)
             level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
             @all_categories = []
             level.map do |a|
@@ -58,9 +59,6 @@ class ParsingController < AuthenticatedController
         @all_chosen_ids_for_categories = []
         @all_categories.map do |array_category|
             array_category.values[0].map do |category|
-                
-                # category.update_attributes(chosen: true)
-                
                 cat_id = category.category_id
                 param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
                 ids = params[param_shopify]
@@ -71,12 +69,6 @@ class ParsingController < AuthenticatedController
                     ids.map do |shopify_category_id|
                         @all_chosen_ids_for_categories << shopify_category_id
                         param_magento = "#{cat_id}_magento_category_id".to_sym
-                        # exist_collection = Collection.where(
-                        #                                       shopify_category_id:  shopify_category_id,
-                        #                                       magento_category_id: params[param_magento],
-                        #                                       login_id: @login.id
-                        #                                       )
-                        
                             Collection.create(
                                               shopify_category_id:  shopify_category_id,
                                               magento_category_id: params[param_magento],
@@ -93,19 +85,28 @@ class ParsingController < AuthenticatedController
         end
     end
     
-        def accepted_collection_exists
+    def accepted_collection_exists
+        Collection.where(login_id: @login.id).delete_all
+        
+        
+        
+        level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
+        @all_categories = []
+        level.map do |a|
+            @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
+        end
         @all_chosen_ids_for_categories = []
         @all_categories.map do |array_category|
             array_category.values[0].map do |category|
-                
-                # category.update_attributes(chosen: true)
-                
                 cat_id = category.category_id
                 param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
+                # byebug if cat_id == nil
                 ids = params[param_shopify]
                 # #include?("-1") - флаг который показывает, что категорию скипаем
                 # in exist_logins we mast view last position of the where we want to import categories, that`s why we mast delete all collection
-                Collection.where(login_id: @login.id).delete_all
+                # unless ids.blank?
+                #     byebug if ids.include?("0")
+                # end
                  # "-1" -- skip, "-2" -- as parent
                 unless ids.blank? || ids.include?("-2")
                     ids.map do |shopify_category_id|

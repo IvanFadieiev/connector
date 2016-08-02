@@ -4,7 +4,9 @@
     <% login = current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.myshopify_domain ) %>
     <% unless login.blank? %>
       <% login = login.last %>
-      <%= link_to "#{login.target_url}", exists_login_path(login) %> with category id: <%= login.store_id %><br>
+      <%= link_to "#{login.target_url}", exists_login_path(login) %> with store view: <%= login.store_id %><br>
     <% end %>
   <% end %>
 <% end %>
+
+<%#= current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.myshopify_domain ).last.id %>

@@ -23,16 +23,23 @@ module Parser
 	class CategoryList
 		def categories(login)
 			begin
-				$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
+				# $response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
+				$response = $client.call(:catalog_category_tree, message: {:sessionId => $session, parent_id: 2, store_view: login.store_id }).body[:catalog_category_tree_response][:tree]
 			rescue
-				Parser::Login.new.login(login)
-				$response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
+				# Parser::Login.new.login(login)
+				# $response = $client.call( :call ){ message( session: $session, method: 'catalog_category.tree', storeView: login.store_id  ) }
+				AuthSavon.connect( login )
+				$response = $client.call(:catalog_category_tree, message: {:sessionId => $session, parent_id: 2, store_view: login.store_id }).body[:catalog_category_tree_response][:tree]
 			end
-		
 		end
 
 		def main_category(login)
-			$items				 = categories(login).body[:call_response][:call_return][:item]
+			# $items				 = categories(login).body[:call_response][:call_return][:item]
+			# $error 				 = []
+			# $error_key_params 	 = []
+			# $error_key_recursive = []
+			# hash_params($items, login)
+			$items				 =  categories(login)
 			$error 				 = []
 			$error_key_params 	 = []
 			$error_key_recursive = []
@@ -41,24 +48,84 @@ module Parser
 
 		def hash_params(items, login)
 			begin
-				arrr  = $client.call(:call){ message( session: $session,
-																				 		  method: 'catalog_category.info',
-																						  productId: items[0][:value]
-																						 )
-																		}.body[:call_response][:call_return][:item]
+				# arrr  = $client.call(:call){ message( session: $session,
+				# 																 		  method: 'catalog_category.info',
+				# 																		  productId: items[0][:value]
+				# 																		 )
+				# 														}.body[:call_response][:call_return][:item]
+				
 				$column_names = [ 'category_id', 'parent_id', 'name', 'description', 'is_active', 'level', 'image']
-				Parser.new_array_with_object(arrr, $column_names, login)
-			rescue
-				$error << items
-				p $error
+				# Parser.new_array_with_object(arrr, $column_names, login)
+				
+				Parser::CategoryList.new.create_magento_category(items, login)
+				
+				
+				
+				
+				# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				# unless Category.find_by(name: attr_hash[:name], login_id: login.id)
+				# 	cat_to_p = Category.create(category_id: attr_hash[:category_id], parent_id: attr_hash[:parent_id], name: attr_hash[:name], description: attr_hash[:description], is_active: attr_hash[:is_active].to_i, level: attr_hash[:level].to_i, image: attr_hash[:image], login_id: login.id)
+				# 	p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
+				# end
+				# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				
+				
+				
+				
+			rescue => e
+				p "#{e}"
 			end
 
-			begin
-				if ( (items[6].class == Hash) && items[6][:value].keys.include?( :item ) ) || ( items[6].class == Array )
-					recursive(items[6], login)
+			# begin
+			# 	if ( (items[6].class == Hash) && items[6][:value].keys.include?( :item ) ) || ( items[6].class == Array )
+			# 		recursive(items[6], login)
+			# 	end
+			# rescue
+			# 	$error_key_params << item
+			# end
+		end
+		
+		def create_magento_category(items, login)
+			begin	
+				if items.class == Hash	
+					if items.keys.include?(:category_id)
+						create_categy(items, login)
+						if items[:children].keys.include?(:item)
+							if 	(items[:children][:item].class == Hash) && (items[:children][:item].keys.include?(:category_id))
+								create_magento_category(items[:children][:item], login)
+							else
+								items[:children][:item].map do |category|
+									# byebug
+									byebug if category.count == 2
+									create_magento_category( category, login )
+								end
+							end
+						end
+					elsif items.keys.include?(:item)
+						items[:item].map do |cat|
+							create_magento_category(cat, login)
+						end
+					end
+				elsif items.class == Array
+					byebug
+					items.map do |item|
+						unless item == :item
+							create_magento_category(items, login)
+						end
+					end
 				end
-			rescue
-				$error_key_params << item
+			rescue => e
+				p e
+			end
+		end
+		
+		def create_categy(items, login)
+			unless Category.find_by(name: items[:name], login_id: login.id)
+				cat_to_p = Category.create(category_id: items[:category_id], parent_id: items[:parent_id], name: items[:name], description: items[:description], is_active: items[:is_active].to_i, level: items[:level].to_i, image: items[:image], login_id: login.id)
+				unless items[:children].class == Hash
+					cat_to_p.update_column(:children, items[:children])
+				end
+	 			p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
 			end
 		end
 
