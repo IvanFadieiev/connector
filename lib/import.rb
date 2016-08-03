@@ -345,19 +345,19 @@ module Import
                                     end
                                 end
 # _--____--__---------___--
-        # if ip.images.blank?
-        #     title = ip.title
-        #     begin
-        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-        #         prod.save
-        #     rescue
-        #         Auth.shopify(login)
-        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-        #         prod.save
-        #     end
-        # end
+        if ip.images.blank?
+            title = ip.title
+            begin
+                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+                prod.save
+            rescue
+                Auth.shopify(login)
+                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+                prod.save
+            end
+        end
                                 product.update_column(:shopify_product_id, id)
                             end
                             
@@ -396,21 +396,21 @@ module Import
                                         end
                                     end
                                 end
-        # if a.images.blank?
-        #     title = a.title
-        #     begin
-        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-        #         prod.save
-        #         p 'updated scope'
-        #     rescue
-        #         Auth.shopify(login)
-        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-        #         prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-        #         prod.save
-        #         p 'updated scope'
-        #     end
-        # end
+        if a.images.blank?
+            title = a.title
+            begin
+                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+                prod.save
+                p 'updated scope'
+            rescue
+                Auth.shopify(login)
+                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
+                prod.save
+                p 'updated scope'
+            end
+        end
                                 sleep 0.5
                             end
                         end

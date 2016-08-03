@@ -9,9 +9,13 @@
                         <h2>These are <%= level_cat.keys.first %> level categories</h2><br>
                     <% end %>    
                         <% level_cat.values[0].each do |category| %>
-                            <%= category[:name] %><br>
-                            <%= hidden_field_tag "#{category[:category_id]}_magento_category_id", category[:category_id]%>
-                            <%= select_tag "#{category[:category_id]}_shopify_categories_ids[]", options_for_select([["- Create new category -", 0], ['- Skip -', -1], ['- As parent -', -2]] + @shopify_collect.collect{ |u| [u.title, u.id] }), {:multiple => :multiple, rows: 8} %><br><br><br>
+                            <% name = "#{category[:category_id]}_magento_category_id" %>
+                            <div class= <%= name %> >
+                                <%= category[:name] %><br>
+                                <%= hidden_field_tag "#{category[:category_id]}_magento_category_id", category[:category_id]%>
+                                <%= hidden_field_tag "mc_#{category[:category_id]}_ids", cat_tree(category[:category_id], current_vendor.logins.last)%>
+                                <%= select_tag "#{category[:category_id]}_shopify_categories_ids[]", options_for_select([["- Create new category -", 0], ['- Skip -', -1], ['- As parent -', -2], ['- Import childrens separately -', category[:category_id]]] + @shopify_collect.collect{ |u| [u.title, u.id] }), {:multiple => :multiple, rows: 8} %><br><br><br>
+                            </div>
                         <% end %>
                     <% end%>
                     <%= f.submit "Accept" %>
@@ -23,3 +27,17 @@
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function(){
+        $('option:nth-child(4)').click(function(){
+            var mid = $(this).val();
+            var ids = $('#mc_' + mid + '_ids').val();
+            $("select#"+ mid +"_shopify_categories_ids_ option[value=" + mid + "]").prop('selected', false);
+            var e = ids.split(" ")
+            $.each( e, function( i, l ){
+                $("select#"+ l +"_shopify_categories_ids_ option[value='0']").prop('selected', true);
+            });
+        })
+    });
+</script>
