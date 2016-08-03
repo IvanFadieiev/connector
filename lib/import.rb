@@ -166,7 +166,7 @@ module Import
             $error_prod = []
             # JoinTableCategoriesProduct.where(login_id: login.id).map(&:product_id).map do |prod_id|
                 # Product.where(login_id: login.id, product_id: prod_id).uniq.map do |product|
-                Product.includes(:images, :magento_categories).where(login_id: login.id).uniq.map do |product|
+                Product.includes(:images, :magento_categories).where(login_id: login.id, status: "1").uniq.map do |product|
                     begin
                         # params for product
                         unless product.description == nil
