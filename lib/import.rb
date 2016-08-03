@@ -166,7 +166,12 @@ module Import
             $error_prod = []
             # JoinTableCategoriesProduct.where(login_id: login.id).map(&:product_id).map do |prod_id|
                 # Product.where(login_id: login.id, product_id: prod_id).uniq.map do |product|
-                Product.includes(:images, :magento_categories).where(login_id: login.id, status: "1").uniq.map do |product|
+                # Product.includes(:images, :magento_categories).where(login_id: login.id, status: "1").uniq.map do |product|
+                    
+                    
+                    
+                    # Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1 and qty > 0", login.id ).uniq.map do |product|
+                    Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1", login.id ).uniq.map do |product|
                     begin
                         # params for product
                         unless product.description == nil
@@ -349,13 +354,13 @@ module Import
             title = ip.title
             begin
                 prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-                prod.save
+                prod.destroy
+                p 'product destroyed'
             rescue
                 Auth.shopify(login)
                 prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-                prod.save
+                prod.destroy
+                p 'product destroyed'
             end
         end
                                 product.update_column(:shopify_product_id, id)
@@ -400,15 +405,13 @@ module Import
             title = a.title
             begin
                 prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-                prod.save
-                p 'updated scope'
+                prod.destroy
+                p 'product destroyed'
             rescue
                 Auth.shopify(login)
                 prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.update_attributes("published_scope": "global", "published_at": nil, "published_status": "published")
-                prod.save
-                p 'updated scope'
+                prod.destroy
+                p 'product destroyed'
             end
         end
                                 sleep 0.5

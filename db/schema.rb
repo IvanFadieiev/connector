@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160729092151) do
+ActiveRecord::Schema.define(version: 20160803093440) do
 
   create_table "categories", force: :cascade do |t|
     t.integer  "category_id", limit: 4
@@ -117,6 +117,7 @@ ActiveRecord::Schema.define(version: 20160729092151) do
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false
     t.integer  "shopify_product_id", limit: 8
+    t.integer  "qty",                limit: 4
   end
 
   add_index "products", ["product_id"], name: "index_products_on_product_id", using: :btree

@@ -1,7 +1,7 @@
 <% if current_vendor %>
   <% unless current_vendor.logins.blank? %>
     
-    <% login = current_vendor.logins.where(target_url: 'ShopifyAPI::Shop.current.myshopify_domain' ) %>
+    <% login = current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.myshopify_domain ) %>
     <% unless login.blank? %>
       <h4>If you want to continue last import, click to the link:</h4>
       <% login = login.last %>

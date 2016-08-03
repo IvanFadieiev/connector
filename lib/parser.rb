@@ -343,7 +343,19 @@ module Parser
 						if prod_in_table.blank?
 							magento_product_count = login.magento_product_count
 							login.update_column( :magento_product_count, magento_product_count + 1 )
-							p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
+							if prod[:status] == "1"
+								begin
+									qty = []
+									$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: prod[:product_id])}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+								rescue
+									Parser::Login.new.login(login)
+									qty = []
+									$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: '21268')}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+								end
+							else
+								qty = ['0']
+							end
+							p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], qty: qty[0].to_i, login_id: login.id)
 							p "Product with ID: #{p.id}  added to the table"
 							p "Left #{count+= -1} prod"
 						end
