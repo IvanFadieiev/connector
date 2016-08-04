@@ -170,8 +170,8 @@ module Import
                     
                     
                     
-                    # Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1 and qty > 0", login.id ).uniq.map do |product|
-                    Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1", login.id ).uniq.map do |product|
+                    Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1 and qty > 0", login.id ).uniq.map do |product|
+                    # Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1", login.id ).uniq.map do |product|
                     begin
                         # params for product
                         unless product.description == nil
@@ -188,11 +188,12 @@ module Import
                         end
                         handle        = product.url_key
                         sku           = product.sku
-                        title      = product.name
+                        title         = product.name
                         barcode       = product.ean
                         status        = product.status
                         weight        = product.weight
                         special_price = product.special_price
+                        qty           = product.qty.to_s
                         # для обновления продукта
                         begin
                             exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
@@ -324,9 +325,9 @@ module Import
                                 
                                 
                                 if special_price == nil
-                                    ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight )
+                                    ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight, 'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
                                 else
-                                    ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight )
+                                    ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight, 'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
                                 end
                                 product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
                                     unless cat.target_category_import.blank?
@@ -372,12 +373,12 @@ module Import
                                 if special_price == nil
                                     counter = login.counter + 1
                                     login.update_column( :counter, counter )
-                                    a.variants.first.update_attributes( 'price': price )
+                                    a.variants.first.update_attributes( 'price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
                                     p 'product updated'
                                 else
                                     counter = login.counter + 1
                                     login.update_column( :counter, counter )
-                                    a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price )
+                                    a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
                                     p 'product updated'
                                 end
                                 product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|

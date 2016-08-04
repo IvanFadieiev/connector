@@ -350,7 +350,7 @@ module Parser
 								rescue
 									Parser::Login.new.login(login)
 									qty = []
-									$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: '21268')}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+									$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: prod[:product_id])}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
 								end
 							else
 								qty = ['0']
