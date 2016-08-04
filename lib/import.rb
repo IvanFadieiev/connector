@@ -170,8 +170,8 @@ module Import
                     
                     
                     
-                    Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1 and qty > 0", login.id ).uniq.map do |product|
-                    # Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1", login.id ).uniq.map do |product|
+                    # Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1 and qty > 0", login.id ).uniq.map do |product|
+                    Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1", login.id ).uniq.map do |product|
                     begin
                         # params for product
                         unless product.description == nil

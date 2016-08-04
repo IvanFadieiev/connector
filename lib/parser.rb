@@ -321,7 +321,7 @@ module Parser
 			# $products_with_errors = []
 			count = array_uniq_products_ids.count
 			array_uniq_products_ids.map do |product_id|
-				begin
+				# begin
 					begin
 						# arrr = $client.call( :call ){ message( session: $session,
 						# 										  method: 'catalog_product.info',
@@ -343,21 +343,72 @@ module Parser
 						if prod_in_table.blank?
 							magento_product_count = login.magento_product_count
 							login.update_column( :magento_product_count, magento_product_count + 1 )
-							if prod[:status] == "1"
+		# if prod[:status] == "1"
+		# 	begin
+		# 		qty = []
+		# 		$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: prod[:product_id])}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+		# 	rescue
+		# 		Parser::Login.new.login(login)
+		# 		qty = []
+		# 		$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: prod[:product_id])}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+		# 	end
+		# else
+		# 	qty = ['0']
+		# end
+							if 	prod[:type] == "configurable"
+								p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], login_id: login.id)
+								p "Product with ID: #{p.id}  added to the table"
 								begin
-									qty = []
-									$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: prod[:product_id])}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+									simple_products = $client.call(:catalog_product_info, message: {:sessionId => $session, product_id: prod[:product_id] , store_view: login.store_id }).body[:catalog_product_info_response][:info][:associated_products][:item]
 								rescue
-									Parser::Login.new.login(login)
-									qty = []
-									$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: prod[:product_id])}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+									AuthSavon.connect( login )
+									simple_products = $client.call(:catalog_product_info, message: {:sessionId => $session, product_id: prod[:product_id] , store_view: login.store_id }).body[:catalog_product_info_response][:info][:associated_products][:item]
 								end
-							else
-								qty = ['0']
+								unless simple_products.blank?
+									simple_products.map do |simple|
+										if simple.include?(:product_id)
+											s_id        = simple[:product_id]
+											s_sku       = simple[:sku]
+											if simple[:options].include?(:item)
+												if (simple[:options][:item].count == 1) || (simple[:options][:item].include?(:"@xsi:type"))
+													s_size      = simple[:options][:item][:value]
+												else
+													size   = []
+													length = []
+													begin
+														simple[:options][:item].map do |s|
+															size << s[:value] if (s[:label] == "Size")
+															length << s[:value] if (s[:label] == "Length")
+														end
+													rescue
+														byebug
+													end
+												end
+												unless length.blank?
+													s_length = length[0]
+												else
+													s_length = nil
+												end
+												s_size   = size[0]   unless size.blank?
+												s_parent_id = prod[:product_id]
+												begin
+													qty = []
+													$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: s_id)}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+												rescue
+													Parser::Login.new.login(login)
+													qty = []
+													$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: s_id)}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+												end
+												ProductSimple.create(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id)
+												p 'add simple product'
+											else
+												p 'NOT INCLUDE SIMPLE'
+											end
+										end
+									end
+								end
+								p "Left #{count+= -1} prod"
 							end
-							p = Product.create(product_id: prod[:product_id], prod_type: prod[:type], sku: prod[:sku], name: prod[:name], ean: prod[:ean], description: prod[:description], price: prod[:price], special_price: prod[:special_price], special_from_date: prod[:special_from_date], special_to_date: prod[:special_to_date], url_key: prod[:url_key], image: prod[:image], color: prod[:color], status: prod[:status], weight: prod[:weight], set: prod[:set], size: prod[:size], qty: qty[0].to_i, login_id: login.id)
-							p "Product with ID: #{p.id}  added to the table"
-							p "Left #{count+= -1} prod"
 						end
 					# end
 					# Parser.new_array_with_object(arrr, $column_names, login)
@@ -377,10 +428,9 @@ module Parser
 					# p "Left #{count+= -1} prod"
 					# # p '------------------------------------------------------------------------'
 					# $all_products << $hash
-				rescue
-					# $products_with_errors << $hash
-					p 'product with error'
-				end
+				# rescue
+				# 	p 'product with error'
+				# end
 			end
 			
 			# $all_products.map do |prod|
