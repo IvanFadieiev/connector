@@ -5,7 +5,6 @@ class ParsingController < AuthenticatedController
     before_filter :categories_group,   only: [:category_product_join_table, :accepted_collection, :accepted_collection_exists]
     
     def category
-        # byebug
         # ParserProcess.new.delay.parse_categories(@login)
         unless Delayed::Job.count >= 1
             # ParsCategoryWorker.perform_async(@login.id)
@@ -100,13 +99,9 @@ class ParsingController < AuthenticatedController
             array_category.values[0].map do |category|
                 cat_id = category.category_id
                 param_shopify = "#{cat_id}_shopify_categories_ids".to_sym
-                # byebug if cat_id == nil
                 ids = params[param_shopify]
                 # #include?("-1") - флаг который показывает, что категорию скипаем
                 # in exist_logins we mast view last position of the where we want to import categories, that`s why we mast delete all collection
-                # unless ids.blank?
-                #     byebug if ids.include?("0")
-                # end
                  # "-1" -- skip, "-2" -- as parent
                 unless ids.blank? || ids.include?("-2")
                     ids.map do |shopify_category_id|

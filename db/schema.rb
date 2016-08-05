@@ -105,7 +105,7 @@ ActiveRecord::Schema.define(version: 20160804133202) do
     t.integer  "login_id",           limit: 4
     t.datetime "created_at",                     null: false
     t.datetime "updated_at",                     null: false
-    t.integer  "shopify_product_id", limit: 4
+    t.integer  "shopify_product_id", limit: 8
   end
 
   add_index "product_simples", ["parent_id"], name: "index_product_simples_on_parent_id", using: :btree

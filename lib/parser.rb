@@ -95,8 +95,6 @@ module Parser
 								create_magento_category(items[:children][:item], login)
 							else
 								items[:children][:item].map do |category|
-									# byebug
-									byebug if category.count == 2
 									create_magento_category( category, login )
 								end
 							end
@@ -107,7 +105,6 @@ module Parser
 						end
 					end
 				elsif items.class == Array
-					byebug
 					items.map do |item|
 						unless item == :item
 							create_magento_category(items, login)
@@ -379,8 +376,8 @@ module Parser
 														length = []
 														begin
 															simple[:options][:item].map do |s|
-																size << s[:value] if (s[:label] == "Size")
-																length << s[:value] if (s[:label] == "Length")
+																size << s[:value] if (s[:store_label] == "Size")
+																length << s[:value] if (s[:store_label] == "Length")
 															end
 														rescue
 															p 'ERROR WITH SIMPLE'
@@ -401,8 +398,10 @@ module Parser
 														qty = []
 														$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: s_id)}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
 													end
-													ProductSimple.create(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id)
-													p 'add simple product'
+													if 	ProductSimple.where(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id).blank?
+														ProductSimple.create(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id)
+														p 'add simple product'
+													end
 												else
 													p 'NOT INCLUDE SIMPLE'
 												end

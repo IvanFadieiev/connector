@@ -18,7 +18,6 @@ module Import
         			session = request.body[:login_response][:login_return]
     				if find_category[0].description == nil
     					response = client.call(:call){message(:session => session, :method=> 'catalog_category.info', categoryId: category.magento_category_id)}.body[:call_response][:call_return][:item]
-    					# byebug
     					desc = []
     					response.map{|a| desc << a if (a[:key] == 'description')}
     					description = desc[0][:value]
@@ -175,7 +174,7 @@ module Import
                     simples = []
                     product.product_simples.where(login_id: login.id).map{|a| simples << a if (a.qty > 0)}
                     unless simples.blank?
-                            begin
+                            # begin
                                 # params for product
                                 unless product.description == nil
                                     unless product.description.include?("{:\"@xsi:type\"")
@@ -195,7 +194,7 @@ module Import
                                 barcode       = product.ean
                                 status        = product.status
                                 weight        = product.weight
-                                special_price = product.special_price
+                                special_price = product.special_price.to_i
                                 qty           = product.qty.to_s
                                 # для обновления продукта
                                 begin
@@ -216,20 +215,20 @@ module Import
                                             counter = login.counter + 1
                                             login.update_column( :counter, counter )
                                             begin
-                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, options: [{name: "Size"}] } )
                                             rescue
                                                 # Reconnect.new_with(login)
                                                 
                                                 # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                                  Auth.shopify(login)
                                                 
-                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, options: [{name: "Size"}] } )
                                             end
                                         else
                                             counter = login.counter + 1
                                             login.update_column( :counter, counter )
                                             begin
-                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published", options: [{name: "Size"}] } )
                                                 counter = login.counter + 1
                                                 login.update_column( :counter, counter )
                                             rescue
@@ -238,7 +237,7 @@ module Import
                                                 # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                                  Auth.shopify(login)
                                                 
-                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published", options: [{name: "Size"}] } )
                                                 counter = login.counter + 1
                                                 login.update_column( :counter, counter )
                                             end
@@ -326,25 +325,30 @@ module Import
                                         end
                                         
                                     
-                                        if product.product_simples.where("login_id LIKE ? and qty > 0 ",login.id).count >  1
-                                            product.product_simples.where("login_id LIKE ? and qty > 0 ",login.id).map do |simple|
+                                        if simples.count >  1
+                                            simples.map do |simple|
+                                                if simple.length
+                                                    option = "#{simple.size } x #{simple.length}"
+                                                else
+                                                    option = simple.size
+                                                end
                                                 if simple.qty != 0
                                                     if special_price == nil
                                                         ip.variants << ShopifyAPI::Variant.new(
-                                                            :sku => sku,
+                                                            :sku => simple.sku,
                                                             :price => price,
                                                             :barcode => barcode,
                                                             :weight => weight,
                                                             :inventory_policy => "continue",
                                                             :inventory_management => "shopify",
                                                             :inventory_quantity => simple.qty,
-                                                            :option1 => simple.size
+                                                            :option1 => option
                                                         )
                                                         p 'add variant'
                                                         ip.save
                                                     else
                                                         ip.variants << ShopifyAPI::Variant.new(
-                                                            :sku => sku,
+                                                            :sku => simple.sku,
                                                             :price =>  special_price,
                                                             :compare_at_price => price,
                                                             :barcode => barcode,
@@ -352,7 +356,7 @@ module Import
                                                             :inventory_policy => "continue",
                                                             :inventory_management => "shopify",
                                                             :inventory_quantity => simple.qty,
-                                                            :option1 => simple.size
+                                                            :option1 => option
                                                         )
                                                         p 'add variant'
                                                         ip.save
@@ -360,12 +364,12 @@ module Import
                                                     simple.update_column(:shopify_product_id, ip.variants.last.id)
                                                 end
                                             end
-                                            product.variants.first.destroy
+                                            ip.variants.first.destroy if ip.variants.count > 2
                                         else
                                             if special_price == nil
-                                                ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.price, 'barcode': product.barcode, 'weight': product.weight, "inventory_policy": "continue", "inventory_management": "shopify", 'inventory_quantity': product.qty )
+                                                ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.price.to_i, 'barcode': product.ean, 'weight': product.weight, "inventory_policy": "continue", "inventory_management": "shopify", 'inventory_quantity': simples[0].qty, 'option1': simples[0].size )
                                             else
-                                                ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.special_price, 'compare_at_price': product.price, 'barcode': product.barcode, 'weight': product.weight, 'inventory_quantity': product.qty, "inventory_policy": "continue", "inventory_management": "shopify" )
+                                                ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.special_price.to_i, 'compare_at_price': product.price.to_i, 'barcode': product.ean, 'weight': product.weight, 'inventory_quantity': simples[0].qty, "inventory_policy": "continue", "inventory_management": "shopify", 'option1': simples[0].size )
                                             end
                                         end
                                         
@@ -411,11 +415,12 @@ module Import
                                 #обновления продукта
                                 else
                                     exist_products.map do |a|
-                                        if special_price == nil
+                                        if product.special_price == nil
                                             counter = login.counter + 1
                                             login.update_column( :counter, counter )
-                                            a.variants.first.update_attributes( 'price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
-                                            p 'product updated'
+                                            # a.variants.map{|a| a.update_attributes( 'price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )}
+                                            a.variants.map{|p| p.update_attributes( 'price': product.price.to_i )}
+                                            p 'product updated +++'
                                             # a.variants.map do |v|
                                             #     v.update_attributes( 'price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
                                             #     p 'product updated'
@@ -423,8 +428,9 @@ module Import
                                         else
                                             counter = login.counter + 1
                                             login.update_column( :counter, counter )
-                                            a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
-                                            p 'product updated'
+                                            # a.variants.map{|a| a.update_attributes( 'price': special_price, 'compare_at_price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )}
+                                            a.variants.map{|p| p.update_attributes( 'price': product.special_price.to_i, 'compare_at_price': product.price.to_i )}
+                                            p 'product updated +++'
                                             # a.variants.map do |v|
                                             #     v.update_attributes( 'price': special_price, 'compare_at_price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
                                             #     p 'product updated'
@@ -467,12 +473,12 @@ module Import
                                         sleep 0.5
                                     end
                                 end
-                            rescue => error
-                                p "Error with update product #{error}"
-                                # Reconnect.new_with(login)
-                                # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                 Auth.shopify(login)
-                            end
+                            # rescue => error
+                            #     p "Error with update product #{error}"
+                            #     # Reconnect.new_with(login)
+                            #     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                            #     #  Auth.shopify(login)
+                            # end
                         # end
                     # end
                     end
