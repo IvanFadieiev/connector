@@ -174,7 +174,7 @@ module Import
                     simples = []
                     product.product_simples.where(login_id: login.id).map{|a| simples << a if (a.qty > 0)}
                     unless simples.blank?
-                            # begin
+                            begin
                                 # params for product
                                 unless product.description == nil
                                     unless product.description.include?("{:\"@xsi:type\"")
@@ -473,12 +473,12 @@ module Import
                                         sleep 0.5
                                     end
                                 end
-                            # rescue => error
-                            #     p "Error with update product #{error}"
-                            #     # Reconnect.new_with(login)
-                            #     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                            #     #  Auth.shopify(login)
-                            # end
+                            rescue => error
+                                p "Error with update product #{error}"
+                                # Reconnect.new_with(login)
+                                # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                                #  Auth.shopify(login)
+                            end
                         # end
                     # end
                     end
