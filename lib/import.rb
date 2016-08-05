@@ -171,261 +171,311 @@ module Import
                     
                     
                     # Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1 and qty > 0", login.id ).uniq.map do |product|
-                    Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1", login.id ).uniq.map do |product|
-                    begin
-                        # params for product
-                        unless product.description == nil
-                            unless product.description.include?("{:\"@xsi:type\"")
-                                body_html = product.description
-                            else
-                                body_html = ""
-                            end
-                        end    
-                        unless (product.price == nil)
-                            price = product.price.to_i
-                        else
-                            price = 0
-                        end
-                        handle        = product.url_key
-                        sku           = product.sku
-                        title         = product.name
-                        barcode       = product.ean
-                        status        = product.status
-                        weight        = product.weight
-                        special_price = product.special_price
-                        qty           = product.qty.to_s
-                        # для обновления продукта
-                        begin
-                            exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
-                        rescue
-                            # Reconnect.new_with(login)
-                            
-                            # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                             Auth.shopify(login)
-                            
-                            exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
-                        end
-                        
-                        if exist_products.blank?
-                            if product.shopify_product_id.blank?
-    
-                                if status == "1"
-                                    counter = login.counter + 1
-                                    login.update_column( :counter, counter )
-                                    begin
-                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
-                                    rescue
-                                        # Reconnect.new_with(login)
-                                        
-                                        # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                         Auth.shopify(login)
-                                        
-                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                    Product.includes(:images, :magento_categories).where("login_id LIKE ? and status = 1 and prod_type = 'configurable'", login.id ).uniq.map do |product|
+                    simples = []
+                    product.product_simples.where(login_id: login.id).map{|a| simples << a if (a.qty > 0)}
+                    unless simples.blank?
+                            begin
+                                # params for product
+                                unless product.description == nil
+                                    unless product.description.include?("{:\"@xsi:type\"")
+                                        body_html = product.description
+                                    else
+                                        body_html = ""
                                     end
+                                end    
+                                unless (product.price == nil)
+                                    price = product.price.to_i
                                 else
-                                    counter = login.counter + 1
-                                    login.update_column( :counter, counter )
-                                    begin
-                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
-                                        counter = login.counter + 1
-                                        login.update_column( :counter, counter )
-                                    rescue
-                                        # Reconnect.new_with(login)
-                                        
-                                        # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                         Auth.shopify(login)
-                                        
-                                        shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
-                                        counter = login.counter + 1
-                                        login.update_column( :counter, counter )
-                                    end
+                                    price = 0
                                 end
-                                shop_product.save
-                                id = shop_product.id
-                                p  "ADD PRODUCT: #{id}"
-                                # Product.find(product.id).update_column(:shopify_product_id, id)
+                                handle        = product.url_key
+                                sku           = product.sku
+                                title         = product.name
+                                barcode       = product.ean
+                                status        = product.status
+                                weight        = product.weight
+                                special_price = product.special_price
+                                qty           = product.qty.to_s
+                                # для обновления продукта
                                 begin
-                                    ip = ShopifyAPI::Product.find(id)
+                                    exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                                 rescue
                                     # Reconnect.new_with(login)
                                     
                                     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
                                      Auth.shopify(login)
                                     
-                                    ip = ShopifyAPI::Product.find(id)
+                                    exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                                 end
-                            # images for product
-                                begin
-                    				arrr = $client.call(:call){ message( session:   $session,
-                    												     method:    'catalog_product_attribute_media.list',
-                    											         productId: product.product_id
-                    													 )
-                    											}.body[:call_response][:call_return][:item]
-                    			rescue => e
-                    			    p e
-                    			    Parser::Login.new.login(login)
-                    			    arrr = $client.call(:call){ message( session:   $session,
-                    												     method:    'catalog_product_attribute_media.list',
-                    											         productId: product.product_id
-                    													 )
-                    											}.body[:call_response][:call_return][:item]
-                    			end
-                				images  = []
-                				if arrr.class == Hash
-                					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
-                				else
-                					unless arrr == nil
-                						arrr.map do |a| 
-                							a[:item].map do |b|
-                								images << b[:value] if ((b[:key] == "url") )
-                							end
-                						end
-                					end
-                				end
-                				if images.any?
-                					images.map do |img_url|
-                						$error2 = []
-                						begin
-                						unless img_url.blank?
-                							begin
-                								open(img_url)
+                                
+                                if exist_products.blank?
+                                    if product.shopify_product_id.blank?
+            
+                                        if status == "1"
+                                            counter = login.counter + 1
+                                            login.update_column( :counter, counter )
+                                            begin
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                            rescue
+                                                # Reconnect.new_with(login)
+                                                
+                                                # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                                                 Auth.shopify(login)
+                                                
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle } )
+                                            end
+                                        else
+                                            counter = login.counter + 1
+                                            login.update_column( :counter, counter )
+                                            begin
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                                counter = login.counter + 1
+                                                login.update_column( :counter, counter )
+                                            rescue
+                                                # Reconnect.new_with(login)
+                                                
+                                                # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                                                 Auth.shopify(login)
+                                                
+                                                shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published" } )
+                                                counter = login.counter + 1
+                                                login.update_column( :counter, counter )
+                                            end
+                                        end
+                                        shop_product.save
+                                        id = shop_product.id
+                                        p  "ADD PRODUCT: #{id}"
+                                        # Product.find(product.id).update_column(:shopify_product_id, id)
+                                        begin
+                                            ip = ShopifyAPI::Product.find(id)
+                                        rescue
+                                            # Reconnect.new_with(login)
+                                            
+                                            # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                                             Auth.shopify(login)
+                                            
+                                            ip = ShopifyAPI::Product.find(id)
+                                        end
+                                    # images for product
+                                        begin
+                            				arrr = $client.call(:call){ message( session:   $session,
+                            												     method:    'catalog_product_attribute_media.list',
+                            											         productId: product.product_id
+                            													 )
+                            											}.body[:call_response][:call_return][:item]
+                            			rescue => e
+                            			    p e
+                            			    Parser::Login.new.login(login)
+                            			    arrr = $client.call(:call){ message( session:   $session,
+                            												     method:    'catalog_product_attribute_media.list',
+                            											         productId: product.product_id
+                            													 )
+                            											}.body[:call_response][:call_return][:item]
+                            			end
+                        				images  = []
+                        				if arrr.class == Hash
+                        					arrr[:item].map{ |a| images << a[:value] if (a[:key] == "url") } 
+                        				else
+                        					unless arrr == nil
+                        						arrr.map do |a| 
+                        							a[:item].map do |b|
+                        								images << b[:value] if ((b[:key] == "url") )
+                        							end
+                        						end
+                        					end
+                        				end
+                        				if images.any?
+                        					images.map do |img_url|
+                        						$error2 = []
+                        						begin
+                        						unless img_url.blank?
+                        							begin
+                        								open(img_url)
+                                                        begin
+                                                            ip.images << { 'src': img_url }
+                                                            ip.save
+                                                        rescue
+                                                            p "Image not found"
+                                                        end        								
+                        								p "Image for Product add to table #{img_url}"
+                        							rescue
+                        							 p 'don`t valid uri for image'	
+                        							end
+                        						else
+                        							p "Product with ID: #{product_id} havn`t image"
+                        						end
+                        						rescue
+                        							$error2 << img_url
+                        							p '-----------------------Error($error2)---------------------------'
+                        						end
+                        					end
+                        				end                        
+                                        
+                                        images_for_product = product.images
+                                        unless images_for_product.blank?
+                                            images_for_product.map do |image_line|
                                                 begin
-                                                    ip.images << { 'src': img_url }
+                                                    src = image_line.img_url
+                                                    ip.images << { 'src': src }
                                                     ip.save
                                                 rescue
                                                     p "Image not found"
-                                                end        								
-                								p "Image for Product add to table #{img_url}"
-                							rescue
-                							 p 'don`t valid uri for image'	
-                							end
-                						else
-                							p "Product with ID: #{product_id} havn`t image"
-                						end
-                						rescue
-                							$error2 << img_url
-                							p '-----------------------Error($error2)---------------------------'
-                						end
-                					end
-                				end                        
-                                
-                                # images_for_product = product.images
-                                # unless images_for_product.blank?
-                                #     images_for_product.map do |image_line|
-                                #         begin
-                                #             src = image_line.img_url
-                                #             ip.images << { 'src': src }
-                                #             ip.save
-                                #         rescue
-                                #             p "Image not found"
-                                #         end
-                                #     end
-                                # end
-                                
-                                
-                                
-                                if special_price == nil
-                                    ip.variants.first.update_attributes( 'sku': sku, 'price': price, 'barcode': barcode, 'weight': weight, 'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
-                                else
-                                    ip.variants.first.update_attributes( 'sku': sku, 'price': special_price, 'compare_at_price': price, 'barcode': barcode, 'weight': weight, 'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
-                                end
-                                product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
-                                    unless cat.target_category_import.blank?
-                                        shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
-                                        begin
-                                            if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                                p "Prod #{id} add to cat: #{shop_cat}"
+                                                end
                                             end
-                                        rescue
-                                            # Reconnect.new_with(login)
-                                            
-                                            # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                             Auth.shopify(login)
-                                            
-                                            if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                                p "Prod #{id} add to cat: #{shop_cat}"
-                                            end                                            
                                         end
-                                    end
-                                end
-# _--____--__---------___--
-        if ip.images.blank?
-            title = ip.title
-            begin
-                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.destroy
-                p 'product destroyed'
-            rescue
-                Auth.shopify(login)
-                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.destroy
-                p 'product destroyed'
-            end
-        end
-                                product.update_column(:shopify_product_id, id)
-                            end
-                            
-                        #обновления продукта
-                        else
-                            exist_products.map do |a|
-                                if special_price == nil
-                                    counter = login.counter + 1
-                                    login.update_column( :counter, counter )
-                                    a.variants.first.update_attributes( 'price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
-                                    p 'product updated'
-                                else
-                                    counter = login.counter + 1
-                                    login.update_column( :counter, counter )
-                                    a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
-                                    p 'product updated'
-                                end
-                                product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
-                                    unless cat.target_category_import.blank?
-                                        shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
-                                        begin
-                                             if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
-                                                p "Prod #{a.id} add to cat: #{shop_cat} +"
-                                             end
-                                        rescue
-                                            # Reconnect.new_with(login)
-                                            
-                                            # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                             Auth.shopify(login)
-                                            
-                                             if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
-                                                p "Prod #{a.id} add to cat: #{shop_cat} +"
-                                             end                                            
+                                        
+                                    
+                                        if product.product_simples.where("login_id LIKE ? and qty > 0 ",login.id).count >  1
+                                            product.product_simples.where("login_id LIKE ? and qty > 0 ",login.id).map do |simple|
+                                                if simple.qty != 0
+                                                    if special_price == nil
+                                                        ip.variants << ShopifyAPI::Variant.new(
+                                                            :sku => sku,
+                                                            :price => price,
+                                                            :barcode => barcode,
+                                                            :weight => weight,
+                                                            :inventory_policy => "continue",
+                                                            :inventory_management => "shopify",
+                                                            :inventory_quantity => simple.qty,
+                                                            :option1 => simple.size
+                                                        )
+                                                        p 'add variant'
+                                                        ip.save
+                                                    else
+                                                        ip.variants << ShopifyAPI::Variant.new(
+                                                            :sku => sku,
+                                                            :price =>  special_price,
+                                                            :compare_at_price => price,
+                                                            :barcode => barcode,
+                                                            :weight => weight,
+                                                            :inventory_policy => "continue",
+                                                            :inventory_management => "shopify",
+                                                            :inventory_quantity => simple.qty,
+                                                            :option1 => simple.size
+                                                        )
+                                                        p 'add variant'
+                                                        ip.save
+                                                    end
+                                                    simple.update_column(:shopify_product_id, ip.variants.last.id)
+                                                end
+                                            end
+                                            product.variants.first.destroy
+                                        else
+                                            if special_price == nil
+                                                ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.price, 'barcode': product.barcode, 'weight': product.weight, "inventory_policy": "continue", "inventory_management": "shopify", 'inventory_quantity': product.qty )
+                                            else
+                                                ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.special_price, 'compare_at_price': product.price, 'barcode': product.barcode, 'weight': product.weight, 'inventory_quantity': product.qty, "inventory_policy": "continue", "inventory_management": "shopify" )
+                                            end
                                         end
-                                    end
-                                end
-        if a.images.blank?
-            title = a.title
-            begin
-                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.destroy
-                p 'product destroyed'
-            rescue
-                Auth.shopify(login)
-                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                prod.destroy
-                p 'product destroyed'
-            end
-        end
-                                sleep 0.5
-                            end
-                        end
-                    rescue => error
-                        p "Error with update product #{error}"
-                        # Reconnect.new_with(login)
-                        # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                         Auth.shopify(login)
+                                        
+                                        
+                                        product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
+                                            unless cat.target_category_import.blank?
+                                                shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
+                                                begin
+                                                    if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                                        p "Prod #{id} add to cat: #{shop_cat}"
+                                                    end
+                                                rescue
+                                                    # Reconnect.new_with(login)
+                                                    
+                                                    # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                                                     Auth.shopify(login)
+                                                    
+                                                    if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                                        p "Prod #{id} add to cat: #{shop_cat}"
+                                                    end                                            
+                                                end
+                                            end
+                                        end
+        # _--____--__---------___--
+                if ip.images.blank?
+                    title = ip.title
+                    begin
+                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                        prod.destroy
+                        p 'product destroyed'
+                    rescue
+                        Auth.shopify(login)
+                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                        prod.destroy
+                        p 'product destroyed'
                     end
-                # end
-            # end
+                end
+                                        product.update_column(:shopify_product_id, id)
+                                    end
+                                    
+                                #обновления продукта
+                                else
+                                    exist_products.map do |a|
+                                        if special_price == nil
+                                            counter = login.counter + 1
+                                            login.update_column( :counter, counter )
+                                            a.variants.first.update_attributes( 'price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
+                                            p 'product updated'
+                                            # a.variants.map do |v|
+                                            #     v.update_attributes( 'price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
+                                            #     p 'product updated'
+                                            # end
+                                        else
+                                            counter = login.counter + 1
+                                            login.update_column( :counter, counter )
+                                            a.variants.first.update_attributes( 'price': special_price, 'compare_at_price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
+                                            p 'product updated'
+                                            # a.variants.map do |v|
+                                            #     v.update_attributes( 'price': special_price, 'compare_at_price': price,'inventory_quantity': qty, "inventory_policy": "continue", "inventory_management": "shopify" )
+                                            #     p 'product updated'
+                                            # end
+                                        end
+                                        product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
+                                            unless cat.target_category_import.blank?
+                                                shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
+                                                begin
+                                                     if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
+                                                        p "Prod #{a.id} add to cat: #{shop_cat} +"
+                                                     end
+                                                rescue
+                                                    # Reconnect.new_with(login)
+                                                    
+                                                    # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                                                     Auth.shopify(login)
+                                                    
+                                                     if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
+                                                        p "Prod #{a.id} add to cat: #{shop_cat} +"
+                                                     end                                            
+                                                end
+                                            end
+                                        end
+                if a.images.blank?
+                    title = a.title
+                    begin
+                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                        prod.destroy
+                        p 'product destroyed'
+                    rescue
+                        Auth.shopify(login)
+                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                        prod.destroy
+                        p 'product destroyed'
+                    end
+                end
+                                        sleep 0.5
+                                    end
+                                end
+                            rescue => error
+                                p "Error with update product #{error}"
+                                # Reconnect.new_with(login)
+                                # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
+                                 Auth.shopify(login)
+                            end
+                        # end
+                    # end
+                    end
             end
         end
     end
