@@ -4,7 +4,7 @@ module Import
         def create(login)
             #
             # Выгребаем категории для создания (с shopify_category_id: 0) и содаем такую же в Shopify, потом апдейтим ее shopify_category_id на тот, который
-            Auth.shopify(login)
+            Auth.shopify
             
             categories_for_creating = Collection.where( login_id: login.id, shopify_category_id: 0 )
             if categories_for_creating.any?
@@ -49,7 +49,7 @@ module Import
                         # Reconnect.new_with(login)
                         
                         # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                         Auth.shopify(login)
+                         Auth.shopify
                         
                         categ = ShopifyAPI::CustomCollection.new( @attributes={ 'title': title, 'body_html': body_html } )
                     end
@@ -61,7 +61,7 @@ module Import
                             # Reconnect.new_with(login)
                             
                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                            Auth.shopify(login)
+                            Auth.shopify
                             
                             img_cat = ShopifyAPI::CustomCollection.find(categ.id)
                         end
@@ -203,7 +203,7 @@ module Import
                                     # Reconnect.new_with(login)
                                     
                                     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                     Auth.shopify(login)
+                                     Auth.shopify
                                     
                                     exist_products =  ShopifyAPI::Product.find(:all, :params => {'title': title })
                                 end
@@ -220,7 +220,7 @@ module Import
                                                 # Reconnect.new_with(login)
                                                 
                                                 # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                                 Auth.shopify(login)
+                                                 Auth.shopify
                                                 
                                                 shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, options: [{name: "Size"}] } )
                                             end
@@ -235,7 +235,7 @@ module Import
                                                 # Reconnect.new_with(login)
                                                 
                                                 # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                                 Auth.shopify(login)
+                                                 Auth.shopify
                                                 
                                                 shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published", options: [{name: "Size"}] } )
                                                 counter = login.counter + 1
@@ -252,7 +252,7 @@ module Import
                                             # Reconnect.new_with(login)
                                             
                                             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                             Auth.shopify(login)
+                                             Auth.shopify
                                             
                                             ip = ShopifyAPI::Product.find(id)
                                         end
@@ -386,7 +386,7 @@ module Import
                                                     # Reconnect.new_with(login)
                                                     
                                                     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                                     Auth.shopify(login)
+                                                     Auth.shopify
                                                     
                                                     if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                         ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
@@ -403,7 +403,7 @@ module Import
                         prod.destroy
                         p 'product destroyed'
                     rescue
-                        Auth.shopify(login)
+                        Auth.shopify
                         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
                         prod.destroy
                         p 'product destroyed'
@@ -448,7 +448,7 @@ module Import
                                                     # Reconnect.new_with(login)
                                                     
                                                     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                                     Auth.shopify(login)
+                                                     Auth.shopify
                                                     
                                                      if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
                                                         ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
@@ -464,7 +464,7 @@ module Import
                         prod.destroy
                         p 'product destroyed'
                     rescue
-                        Auth.shopify(login)
+                        Auth.shopify
                         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
                         prod.destroy
                         p 'product destroyed'
@@ -477,7 +477,7 @@ module Import
                                 p "Error with update product #{error}"
                                 # Reconnect.new_with(login)
                                 # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                #  Auth.shopify(login)
+                                #  Auth.shopify
                             end
                         # end
                     # end
@@ -489,7 +489,7 @@ module Import
     class Reconnect
         def self.new_with(login)
             # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-             Auth.shopify(login)
+             Auth.shopify
         end
     end
 end

@@ -41,7 +41,7 @@ class ParsingController < AuthenticatedController
         unless Delayed::Job.count >= 1
             # @login = Login.find(params[:login_id])
             @login = current_vendor.logins.where(target_url: ShopifyAPI::Shop.current.myshopify_domain).last
-            Auth.shopify(@login)
+            Auth.shopify
             level = Category.all.map(&:level).uniq.reject{ |a| (a == 0) || (a == 1) }.sort
             @all_categories = []
             level.map do |a|
