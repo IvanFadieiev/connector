@@ -365,46 +365,50 @@ module Parser
 									simple_products = prod[:associated_products][:item]
 									unless simple_products.blank?
 										simple_products.map do |simple|
-											if simple.include?(:product_id)
-												s_id        = simple[:product_id]
-												s_sku       = simple[:sku]
-												if simple[:options].include?(:item)
-													if (simple[:options][:item].count == 1) || (simple[:options][:item].include?(:"@xsi:type"))
-														s_size      = simple[:options][:item][:value]
-													else
-														size   = []
-														length = []
-														begin
-															simple[:options][:item].map do |s|
-																size << s[:value] if (s[:store_label] == "Size")
-																length << s[:value] if (s[:store_label] == "Length")
+											begin
+												if simple.include?(:product_id)
+													s_id        = simple[:product_id]
+													s_sku       = simple[:sku]
+													if simple[:options].include?(:item)
+														if (simple[:options][:item].count == 1) || (simple[:options][:item].include?(:"@xsi:type"))
+															s_size      = simple[:options][:item][:value]
+														else
+															size   = []
+															length = []
+															begin
+																simple[:options][:item].map do |s|
+																	size << s[:value] if (s[:store_label] == "Size")
+																	length << s[:value] if (s[:store_label] == "Length")
+																end
+															rescue
+																p 'ERROR WITH SIMPLE'
 															end
-														rescue
-															p 'ERROR WITH SIMPLE'
 														end
-													end
-													unless length.blank?
-														s_length = length[0]
+														unless length.blank?
+															s_length = length[0]
+														else
+															s_length = nil
+														end
+														s_size   = size[0]   unless size.blank?
+														s_parent_id = prod[:product_id]
+														begin
+															qty = []
+															$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: s_id)}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+														rescue
+															Parser::Login.new.login(login)
+															qty = []
+															$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: s_id)}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
+														end
+														if 	ProductSimple.where(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id).blank?
+															ProductSimple.create(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id)
+															p 'add simple product'
+														end
 													else
-														s_length = nil
+														p 'NOT INCLUDE SIMPLE'
 													end
-													s_size   = size[0]   unless size.blank?
-													s_parent_id = prod[:product_id]
-													begin
-														qty = []
-														$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: s_id)}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
-													rescue
-														Parser::Login.new.login(login)
-														qty = []
-														$response = $client.call(:call){message(:session => $session, :method=> 'cataloginventory_stock_item.list', productId: s_id)}.body[:call_response][:call_return][:item][:item].map{|x| qty << x[:value] if (x[:key] == 'qty')}
-													end
-													if 	ProductSimple.where(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id).blank?
-														ProductSimple.create(product_id: s_id, parent_id: s_parent_id, sku: s_sku, length: s_length, size: s_size, qty: qty[0].to_i, login_id: login.id)
-														p 'add simple product'
-													end
-												else
-													p 'NOT INCLUDE SIMPLE'
 												end
+											rescue
+												p "deech"
 											end
 										end
 									end

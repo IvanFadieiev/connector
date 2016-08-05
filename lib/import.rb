@@ -43,7 +43,8 @@ module Import
                         else
                              body_html = ""
                         end
-                    rescue
+                    rescue => e
+                        p "#{e}"
                         body_html = ""
                     end
                     src = find_category[0].image
@@ -138,7 +139,6 @@ module Import
         #         data = $children_categories_1_lavel
         #         # создать TargetCategoryImport для каждой дочерней категории
         #         $children_categories_1_lavel.map do |children|
-        #             unless ids.include?(category.magento_category_id)
         #                 TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
         #             end
         #         end
@@ -182,13 +182,14 @@ module Import
                                 # params for product
                                 begin
                                     unless product.description == nil
-                                        unless product.description.include?("{:\"@xsi:type\"")
+                                        unless product.description.include?("{")
                                             body_html = product.description
                                         else
                                             body_html = ""
                                         end
                                     end
-                                rescue
+                                rescue => e
+                                    p "#{e}"
                                     body_html = ""
                                 end
                                 unless (product.price == nil)
