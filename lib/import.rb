@@ -33,18 +33,18 @@ module Import
         			
         			
                     title = find_category[0][:name]
-                    unless find_category[0][:description] == nil
-                        begin
+                    begin
+                        unless find_category[0][:description] == nil
                             unless find_category[0][:description].include?("{")
                                 body_html = find_category[0].description
                             else
-                                body_html = nil
+                                body_html = ""
                             end
-                        rescue
-                            body_html = nil
+                        else
+                             body_html = ""
                         end
-                    else
-                         body_html = nil
+                    rescue
+                        body_html = ""
                     end
                     src = find_category[0].image
                     begin
