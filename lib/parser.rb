@@ -118,9 +118,14 @@ module Parser
 		
 		def create_categy(items, login)
 			unless Category.find_by(name: items[:name], login_id: login.id)
-				cat_to_p = Category.create(category_id: items[:category_id], parent_id: items[:parent_id], name: items[:name], description: items[:description], is_active: items[:is_active].to_i, level: items[:level].to_i, image: items[:image], login_id: login.id)
+				if   (items[:description] == nil) || (items[:description] != nil && items[:description].include?("@xsi"))
+					desc =  ""
+				else
+					desc = items[:description]
+				end
+				cat_to_p = Category.create(category_id: items[:category_id], parent_id: items[:parent_id], name: items[:name], description: desc, is_active: items[:is_active].to_i, level: items[:level].to_i, image: items[:image], login_id: login.id)
 				unless items[:children].class == Hash
-					cat_to_p.update_column(:children, items[:children])
+					cat_to_p.update_attributes(children: items[:children])
 				end
 	 			p "Category with id #{ cat_to_p.category_id } added to the CATEGORY TABLE!!!"
 			end
@@ -338,8 +343,12 @@ module Parser
 					# $all_products.map do |prod|
 						prod_in_table = Product.where(login_id: login.id, product_id: prod[:product_id])
 						if prod_in_table.blank?
-							magento_product_count = login.magento_product_count
-							login.update_column( :magento_product_count, magento_product_count + 1 )
+							if login.magento_product_count
+								magento_product_count = login.magento_product_count
+							else
+								magento_product_count = 0
+							end
+							login.update_attributes( magento_product_count: magento_product_count + 1 )
 							if prod[:status] == "1"
 								begin
 									qty = []
