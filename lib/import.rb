@@ -26,12 +26,7 @@ module Import
     					image = img[0][:value]
     					find_category[0].update_attributes( description: description, image: image )
     				end
-        			
-        			
-        			
-        			
-        			
-        			
+
                     title = find_category[0][:name]
                     begin
                         unless find_category[0][:description] == nil
@@ -75,7 +70,6 @@ module Import
                     end
                     p "#{categ} CATEGORY CRATED!!!"
                     category.update_attributes(shopify_category_id: categ.id)
-                    
                 end
             end
         end
@@ -107,49 +101,6 @@ module Import
     end
     
     class   CreateProducts < AuthenticatedController
-        # extend ShopSession
-        # def recursive( children_categories_1_lavel, category, login, data )
-        #     ids = Collection.where(login_id: login.id).map(&:magento_category_id)
-        #     unless children_categories_1_lavel.blank?
-        #         children_categories_2_lavel = []
-        #         children_categories_1_lavel.uniq.map do |_1_lav_cat|
-        #             data.map{|a| children_categories_2_lavel << a if (a.parent_id == _1_lav_cat.category_id)}
-        #         end
-                
-        #         # создать TargetCategoryImport для каждого из $children_categories_2_lavel
-        #         unless children_categories_2_lavel.blank?
-        #             children_categories_2_lavel.uniq.map do |children|
-        #                     TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
-        #                 end
-        #             end
-        #         end
-        #         unless children_categories_2_lavel.blank?
-        #             recursive( children_categories_2_lavel, category, login, data )
-        #         end
-        #     end
-        # end
-        
-        # def create_products_to_shop(login)
-        #     Reconnect.new_with(login)
-        #     ids = Collection.where(login_id: login.id).map(&:magento_category_id)
-        #     created_categories = Collection.where( login_id: login.id ).order('id DESC').distinct
-        #     created_categories.map do |category|
-        #         TargetCategoryImport.create( magento_category_id: category.magento_category_id,  category.shopify_category_id, login_id: login.id )
-        #         $children_categories_1_lavel = Category.where(login_id: login.id, parent_id: category.magento_category_id )
-        #         data = $children_categories_1_lavel
-        #         # создать TargetCategoryImport для каждой дочерней категории
-        #         $children_categories_1_lavel.map do |children|
-        #                 TargetCategoryImport.create( magento_category_id: children.category_id, shopify_category_id: category.shopify_category_id, login_id: login.id )
-        #             end
-        #         end
-                
-        #         recursive( $children_categories_1_lavel, category, login, data )
-    
-        #     end
-        #     create_products(login)
-        # end
-        
-        
         def create_products_to_shop(login)
             categories_tree = Parser::ProductList.new.array_of_categories_tree(login)
             categories_tree.map do |category_tree_ids|
@@ -158,6 +109,10 @@ module Import
                     # TargetCategoryImport.where( login_id: login.id).delete_all
                     if TargetCategoryImport.find_by( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id ).blank?
                         TargetCategoryImport.create( magento_category_id: id, shopify_category_id: target.shopify_category_id, login_id: login.id )
+                        cat_for_monitoring = CategoryForMonitoring.where(magento_category_id: id, shopify_category_id: target.shopify_category_id, shopify_domain: login.target_url)
+                        unless cat_for_monitoring.blank?
+                            CategoryForMonitoring.create(magento_category_id: id, shopify_category_id: target.shopify_category_id, shopify_domain: login.target_url)
+                        end
                     end
                     p 'target created'
                 end
@@ -404,20 +359,19 @@ module Import
                                                 end
                                             end
                                         end
-        # _--____--__---------___--
-                if ip.images.blank?
-                    title = ip.title
-                    begin
-                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                        prod.destroy
-                        p 'product destroyed'
-                    rescue
-                        Auth.shopify
-                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                        prod.destroy
-                        p 'product destroyed'
-                    end
-                end
+                                        if ip.images.blank?
+                                            title = ip.title
+                                            begin
+                                                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                                                prod.destroy
+                                                p 'product destroyed'
+                                            rescue
+                                                Auth.shopify
+                                                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                                                prod.destroy
+                                                p 'product destroyed'
+                                            end
+                                        end
                                         product.update_attributes(shopify_product_id: id)
                                     end
                                     
@@ -466,19 +420,19 @@ module Import
                                                 end
                                             end
                                         end
-                if a.images.blank?
-                    title = a.title
-                    begin
-                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                        prod.destroy
-                        p 'product destroyed'
-                    rescue
-                        Auth.shopify
-                        prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                        prod.destroy
-                        p 'product destroyed'
-                    end
-                end
+                                        if a.images.blank?
+                                            title = a.title
+                                            begin
+                                                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                                                prod.destroy
+                                                p 'product destroyed'
+                                            rescue
+                                                Auth.shopify
+                                                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                                                prod.destroy
+                                                p 'product destroyed'
+                                            end
+                                        end
                                         sleep 0.5
                                     end
                                 end

@@ -7,8 +7,9 @@ class UserMailer < ApplicationMailer
         end
     end
     
-    def error(e)
+    def error(e, msg)
+        @proccess = msg
         @error = e
-        mail(to: 'ivanfadeev91@gmail.com', subject: 'ERROR with Import of DB')        
+        mail(to: 'ivanfadeev91@gmail.com', subject: "ERROR with #{msg} of DB")        
     end
 end

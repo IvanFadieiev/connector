@@ -26,7 +26,7 @@ class ParserProcess
                 UserMailer.letter(email).deliver_now
             end
         rescue => e
-            UserMailer.error(e).deliver_now            
+            UserMailer.error(e, 'Import').deliver_now            
         end    
     end
 end

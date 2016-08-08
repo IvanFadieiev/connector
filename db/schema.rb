@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160804133202) do
+ActiveRecord::Schema.define(version: 20160808150608) do
 
   create_table "categories", force: :cascade do |t|
     t.integer  "category_id", limit: 4
@@ -29,6 +29,12 @@ ActiveRecord::Schema.define(version: 20160804133202) do
 
   add_index "categories", ["category_id"], name: "index_categories_on_category_id", using: :btree
   add_index "categories", ["parent_id"], name: "index_categories_on_parent_id", using: :btree
+
+  create_table "category_for_monitorings", id: false, force: :cascade do |t|
+    t.integer "magento_category_id", limit: 8
+    t.integer "shopify_category_id", limit: 8
+    t.string  "shopify_domain",      limit: 255
+  end
 
   create_table "collections", force: :cascade do |t|
     t.integer  "shopify_category_id", limit: 4
@@ -61,8 +67,9 @@ ActiveRecord::Schema.define(version: 20160804133202) do
     t.integer  "category_id", limit: 4
     t.integer  "product_id",  limit: 4
     t.integer  "login_id",    limit: 4
-    t.datetime "created_at",            null: false
-    t.datetime "updated_at",            null: false
+    t.datetime "created_at",                            null: false
+    t.datetime "updated_at",                            null: false
+    t.boolean  "new",                   default: false
   end
 
   add_index "join_table_categories_products", ["category_id"], name: "index_join_table_categories_products_on_category_id", using: :btree
@@ -103,9 +110,10 @@ ActiveRecord::Schema.define(version: 20160804133202) do
     t.string   "length",             limit: 255
     t.integer  "qty",                limit: 4
     t.integer  "login_id",           limit: 4
-    t.datetime "created_at",                     null: false
-    t.datetime "updated_at",                     null: false
+    t.datetime "created_at",                                     null: false
+    t.datetime "updated_at",                                     null: false
     t.integer  "shopify_product_id", limit: 8
+    t.boolean  "new",                            default: false
   end
 
   add_index "product_simples", ["parent_id"], name: "index_product_simples_on_parent_id", using: :btree
@@ -129,10 +137,11 @@ ActiveRecord::Schema.define(version: 20160804133202) do
     t.string   "set",                limit: 255
     t.string   "size",               limit: 255
     t.integer  "login_id",           limit: 4
-    t.datetime "created_at",                       null: false
-    t.datetime "updated_at",                       null: false
+    t.datetime "created_at",                                       null: false
+    t.datetime "updated_at",                                       null: false
     t.integer  "shopify_product_id", limit: 8
     t.integer  "qty",                limit: 4
+    t.boolean  "new",                              default: false
   end
 
   add_index "products", ["product_id"], name: "index_products_on_product_id", using: :btree

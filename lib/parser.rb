@@ -221,27 +221,7 @@ module Parser
 		end
 
 		def create_join_table_categories_products(login)
-			# $array_cat = []
-			# # $parsed_data = Category.where(login_id: login.id).map do |cat|
-			# $parsed_data = Collection.where( login_id: login.id).each do |cat|
-			# 	id = cat.magento_category_id
-			# # $parsed_data = Category.where(login_id: login.id, chosen: true).map do |cat|
-			# 	# id = cat.category_id
-			# 	p "Parsed category #{ id }"
-			# 	Parser::ProductList.new.category_products( id )
-			# 	Parser::ProductList.new.check_nil( $products_to_category, id, login )
-			# end
 			$array_cat = []
-			
-			# array_category = Parser::ProductList.new.array_of_categories_tree(login).flatten.map |c|
-			# 	find_cat = Category.find_by(category_id: c, login_id: login.id)
-			# 	unless find_cat.blank?
-			# 		id = find_cat.category_id
-			# 		array_category.delete_if{|m| m == id}
-			# 	end
-			# end
-			
-			# подставить array_category вместо Parser::ProductList.new.array_of_categories_tree(login).flatten 
 			Parser::ProductList.new.array_of_categories_tree(login).flatten.each do |cat_id|
 				p "Parsed category #{ cat_id }"
 				Parser::ProductList.new.category_products( cat_id, login )
@@ -288,54 +268,12 @@ module Parser
 			$error_with_creating_product_table = []
 			parsed_data = JoinTableCategoriesProduct.where(login_id: login.id).map{ |a| a.product_id }
 			array_uniq_products_ids = parsed_data.uniq
-			# $custom_attr = [
-			# 								'modelsize',
-			# 								'size',
-			# 								'size_a',
-			# 								'size_b',
-			# 								'size_c',
-			# 								'size_d',
-			# 								'size_e',
-			# 								'size_f',
-			# 								'size_g',
-			# 								'size_h',
-			# 								'size_j'
-			# 							]
-			# $column_names = [
-			# 								'product_id',
-			# 								'type',
-			# 								'sku',
-			# 								'name',
-			# 								'ean',
-			# 								'description',
-			# 								'price',
-			# 								'special_price',
-			# 								'special_from_date',
-			# 								'special_to_date',
-			# 								'url_key',
-			# 								'image',
-			# 								'color',
-			# 								'status',
-			# 								'weight',
-			# 								'set'
-			# 								]
-			# $all_products = []
-			# $products_with_errors = []
 			count = array_uniq_products_ids.count
 			array_uniq_products_ids.map do |product_id|
 				begin
 					begin
-						# arrr = $client.call( :call ){ message( session: $session,
-						# 										  method: 'catalog_product.info',
-						# 										  productId: product_id
-						# 										  ) }.body[:call_response][:call_return][:item]			
 						prod = $client.call(:catalog_product_info, message: {session_id: $session, product_id: product_id , store_view: login.store_id }).body[:catalog_product_info_response][:info]
 					rescue
-						# Parser::Login.new.login(login)
-						# arrr = $client.call( :call ){ message( session: $session,
-						# 											  method: 'catalog_product.info',
-						# 											  productId: product_id
-						# 											  ) }.body[:call_response][:call_return][:item]
 						AuthSavon.connect( login )
 						prod = $client.call(:catalog_product_info, message: {session_id: $session, product_id: product_id , store_view: login.store_id }).body[:catalog_product_info_response][:info]
 					end

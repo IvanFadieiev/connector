@@ -56,3 +56,4 @@ gem 'devise'
 gem 'activerecord-session_store'
 gem 'daemons'
 gem "rails-erd"
+gem 'whenever', :require => false
