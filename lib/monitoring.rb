@@ -2,12 +2,12 @@ module Monitoring
     class Product_in_magento_shop
     	def create_join_table_categories_products
     		$array_cat = []
-    		monitored_cat = CategoryForMonitoring.all.map(&:magento_category_id).distinct
+    		monitored_cat = CategoryForMonitoring.all.map(&:magento_category_id).uniq
     		unless monitored_cat.blank?
     		    monitored_cat.each do |cat_id|
         			p "Parsed category #{ cat_id }"
-        			Parser::ProductList.new.category_products( cat_id )
-        			Parser::ProductList.new.check_nil( $products_to_category, cat_id )
+        			category_products( cat_id )
+        			check_nil( $products_to_category, cat_id )
         		end
         	end
     	end
@@ -156,8 +156,7 @@ module Monitoring
     							rescue => e
     									p "without simple #{e} with prod #{prod[:product_id]}"
     							end
-    				# 			p "Left #{count+= -1} prod"
-    				            p 'some deech'
+    				            p 'monitoring proccess done'
     						end
     					end
     			rescue
@@ -240,8 +239,7 @@ module Monitoring
                             											         productId: product.product_id
                             													 )
                             											}.body[:call_response][:call_return][:item]
-                            			rescue => e
-                            			    p e
+                            			rescue
                             			    login_v1
                             			    arrr = $client.call(:call){ message( session:   $session,
                             												     method:    'catalog_product_attribute_media.list',
@@ -350,91 +348,48 @@ module Monitoring
                                             end
                                         end
                                         
-                                        
                                         product.magento_categories.where(new: true).group(:category_id).distinct.map do |cat|
-                                            
-                                            # unless cat.target_category_import.blank?
-                                            CategoryForMonitoring.where( magento_category_id: cat.category_id )
-                                                shop_cat = cat.target_category_import.where(new: true).last.shopify_category_id
-                                                begin
-                                                    if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                                        p "Prod #{id} add to cat: #{shop_cat}"
+                                            unless cat.target_category_import.blank?
+                                                category_targets = CategoryForMonitoring.where( magento_category_id: cat.category_id ).map(&:shopify_category_id)
+                                                unless category_targets.blank?
+                                                    category_targets.map do |shop_cat|
+                                                        begin
+                                                            if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                                                print "Prod #{id} add to cat: #{shop_cat}"
+                                                            end
+                                                        rescue
+                                                            Auth.shopify
+                                                            if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
+                                                                ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
+                                                                print "Prod #{id} add to cat: #{shop_cat}"
+                                                            end                                            
+                                                        end
                                                     end
-                                                rescue
-                                                    Auth.shopify
-                                                    if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                                        ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": id})
-                                                        p "Prod #{id} add to cat: #{shop_cat}"
-                                                    end                                            
                                                 end
-                                            # end
-                                        end
-                                        if ip.images.blank?
-                                            title = ip.title
-                                            begin
-                                                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                                                prod.destroy
-                                                p 'product destroyed'
-                                            rescue
-                                                Auth.shopify
-                                                prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                                                prod.destroy
-                                                p 'product destroyed'
                                             end
                                         end
+                                        #
+                                        # delete if product haven`t images
+                                        #
+                                        # if ip.images.blank?
+                                        #     title = ip.title
+                                        #     begin
+                                        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title }).last
+                                        #         prod.destroy
+                                        #         p 'product destroyed'
+                                        #     rescue
+                                        #         Auth.shopify
+                                        #         prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
+                                        #         prod.destroy
+                                        #         p 'product destroyed'
+                                        #     end
+                                        # end
                                         product.update_attributes(shopify_product_id: id)
                                     end
-                                    
-                                #обновления продукта
-                                # else
-                                #     exist_products.map do |a|
-                                #         if product.special_price == nil
-                                #             a.variants.map{|p| p.update_attributes( 'price': product.price.to_i )}
-                                #             p 'product updated +++'
-                                #         else
-                                #             a.variants.map{|p| p.update_attributes( 'price': product.special_price.to_i, 'compare_at_price': product.price.to_i )}
-                                #             p 'product updated +++'
-                                #         end
-                                #         product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|
-                                #             unless cat.target_category_import.blank?
-                                #                 shop_cat = cat.target_category_import.where(login_id: login.id).last.shopify_category_id
-                                #                 begin
-                                #                      if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                #                         ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
-                                #                         p "Prod #{a.id} add to cat: #{shop_cat} +"
-                                #                      end
-                                #                 rescue
-                                #                     # Reconnect.new_with(login)
-                                                    
-                                #                     # current_shop = Shop.find_by( shopify_domain: "magic-streetwear.myshopify.com" )
-                                #                      Auth.shopify
-                                                    
-                                #                      if ShopifyAPI::Collect.find(:all, :params => {"collection_id": shop_cat, "product_id": id}).blank?
-                                #                         ShopifyAPI::Collect.create({"collection_id": shop_cat, "product_id": a.id})
-                                #                         p "Prod #{a.id} add to cat: #{shop_cat} +"
-                                #                      end                                            
-                                #                 end
-                                #             end
-                                #         end
-                                #         if a.images.blank?
-                                #             title = a.title
-                                #             begin
-                                #                 prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                                #                 prod.destroy
-                                #                 p 'product destroyed'
-                                #             rescue
-                                #                 Auth.shopify
-                                #                 prod = ShopifyAPI::Product.find(:all, :params => {'title': title })
-                                #                 prod.destroy
-                                #                 p 'product destroyed'
-                                #             end
-                                #         end
-                                #         sleep 0.5
-                                #     end
                                 end
                             rescue => error
-                                p "Error with update product #{error}"
+                                puts "Error with update product! Error: #{error}"
                             end
                     end
             end
@@ -446,12 +401,13 @@ module Monitoring
             begin
                 Product_in_magento_shop.new.create_join_table_categories_products
                 Product_in_magento_shop.new.create_product_table
-                Product_in_magento_shop.new.crate_products
+                Product_in_magento_shop.new.create_products
                 JoinTableCategoriesProduct.where(new: true).update_all(new: false)
                 Product.where(new: true).update_all(new: false)
                 ProductSimple.where(new: true).update_all(new: false)
+                UserMailer.monitoring("success monitoring", 'Monitoring').deliver_now
             rescue => e
-                UserMailer.error(e, 'Monitoring').deliver_now
+                UserMailer.monitoring(e, 'Monitoring').deliver_now
             end
         end
     end

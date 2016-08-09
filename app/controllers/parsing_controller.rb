@@ -34,7 +34,11 @@ class ParsingController < AuthenticatedController
         #     @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
         # end
         @collection = Collection.new
-        @shopify_collect = ShopifyAPI::CustomCollection.all
+        all = []
+        (1).upto(8) do |n|
+            all << ShopifyAPI::CustomCollection.find(:all, params: { limit: 250, page: n })
+        end
+        @shopify_collect = all.flatten.uniq
     end
     
     def exists_login
@@ -48,7 +52,11 @@ class ParsingController < AuthenticatedController
                 @all_categories << { a => Category.where(level: a, is_active: 1, login_id: @login.id)}
             end
             @collection = Collection.new
-            @shopify_collect = ShopifyAPI::CustomCollection.all
+            all = []
+            (1).upto(8) do |n|
+                all << ShopifyAPI::CustomCollection.find(:all, params: { limit: 250, page: n })
+            end
+            @shopify_collect = all.flatten.uniq
         else
            redirect_to  in_process_path
         end
