@@ -128,7 +128,7 @@ module Import
                             body_html = ""
                         end
                         unless (product.price == nil)
-                            price = product.price.to_i
+                            price = product.price.to_f
                         else
                             price = 0
                         end
@@ -138,7 +138,7 @@ module Import
                         barcode       = product.ean
                         status        = product.status
                         weight        = product.weight
-                        special_price = product.special_price.to_i
+                        special_price = product.special_price.to_f
                         qty           = product.qty.to_s
                         # для обновления продукта
                         begin
@@ -264,7 +264,7 @@ module Import
                                             if product.special_price == nil
                                                 ip.variants << ShopifyAPI::Variant.new(
                                                     :sku => simple.sku,
-                                                    :price => product.price.to_i,
+                                                    :price => product.price.to_f,
                                                     :barcode => product.ean,
                                                     :weight => product.weight,
                                                     :inventory_policy => "continue",
@@ -277,8 +277,8 @@ module Import
                                             else
                                                 ip.variants << ShopifyAPI::Variant.new(
                                                     :sku => simple.sku,
-                                                    :price =>  product.special_price.to_i,
-                                                    :compare_at_price => product.price.to_i,
+                                                    :price =>  product.special_price.to_f,
+                                                    :compare_at_price => product.price.to_f,
                                                     :barcode => product.ean,
                                                     :weight => product.weight,
                                                     :inventory_policy => "continue",
@@ -295,9 +295,9 @@ module Import
                                     ip.variants.first.destroy if ip.variants.count > 2
                                 else
                                     if product.special_price == nil
-                                        ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.price.to_i, 'barcode': product.ean, 'weight': product.weight, "inventory_policy": "continue", "inventory_management": "shopify", 'inventory_quantity': simples[0].qty, 'option1': simples[0].size )
+                                        ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.price.to_f, 'barcode': product.ean, 'weight': product.weight, "inventory_policy": "continue", "inventory_management": "shopify", 'inventory_quantity': simples[0].qty, 'option1': simples[0].size )
                                     else
-                                        ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.special_price.to_i, 'compare_at_price': product.price.to_i, 'barcode': product.ean, 'weight': product.weight, 'inventory_quantity': simples[0].qty, "inventory_policy": "continue", "inventory_management": "shopify", 'option1': simples[0].size )
+                                        ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.special_price.to_f, 'compare_at_price': product.price.to_f, 'barcode': product.ean, 'weight': product.weight, 'inventory_quantity': simples[0].qty, "inventory_policy": "continue", "inventory_management": "shopify", 'option1': simples[0].size )
                                     end
                                 end
                                 
@@ -341,12 +341,12 @@ module Import
                                 if product.special_price == nil
                                     counter = login.counter + 1
                                     login.update_attributes( counter: counter )
-                                    a.variants.map{|p| p.update_attributes( 'price': product.price.to_i )}
+                                    a.variants.map{|p| p.update_attributes( 'price': product.price.to_f )}
                                     p 'product updated +++'
                                 else
                                     counter = login.counter + 1
                                     login.update_attributes( counter: counter )
-                                    a.variants.map{|p| p.update_attributes( 'price': product.special_price.to_i, 'compare_at_price': product.price.to_i )}
+                                    a.variants.map{|p| p.update_attributes( 'price': product.special_price.to_f, 'compare_at_price': product.price.to_f )}
                                     p 'product updated +++'
                                 end
                                 product.magento_categories.where(login_id: login.id).group(:category_id).distinct.map do |cat|

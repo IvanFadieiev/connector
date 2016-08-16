@@ -2,6 +2,7 @@ class Auth < AuthenticatedController
    def self.shopify
         # current_shop = Shop.find_by( shopify_domain: login.target_url )
         # domain = current_shop.shopify_domain
+        
         # token = current_shop.shopify_token
         # domain = "demo-magic.myshopify.com"
         # token = "3b9cdf02bdee2dbc8cd2b20d13a8b861"
