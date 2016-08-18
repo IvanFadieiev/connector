@@ -10,12 +10,12 @@ class UserMailer < ApplicationMailer
     def error(e, msg)
         @proccess = msg
         @error = e
-        mail(to: 'ivanfadeev91@gmail.com', subject: "ERROR with #{msg} of DB")        
+        mail(to: 'mshconnector@gmail.com', subject: "ERROR with #{msg} of DB")        
     end
     
     def monitoring(e, msg)
         @proccess = msg
         @error = e
-        mail(to: 'ivanfadeev91@gmail.com', subject: "#{msg} of DB")
+        mail(to: 'mshconnector@gmail.com', subject: "#{msg} of DB")
     end
 end

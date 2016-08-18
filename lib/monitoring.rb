@@ -207,7 +207,6 @@ module Monitoring
                                 
                                 if exist_products.blank?
                                     if product.shopify_product_id.blank?
-            
                                         if status == "1"
                                             begin
                                                 shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, options: [{name: "Size"}] } )
@@ -223,6 +222,7 @@ module Monitoring
                                                 shop_product = ShopifyAPI::Product.new( @attributes={ 'title': title, 'body_html': body_html, 'handle': handle, "published_scope": "global", "published_at": nil, "published_status": "published", options: [{name: "Size"}] } )
                                             end
                                         end
+                                        sleep 0.5
                                         shop_product.save
                                         id = shop_product.id
                                         p  "ADD PRODUCT: #{id}"
@@ -320,6 +320,7 @@ module Monitoring
                                                             :option1 => option
                                                         )
                                                         p 'add variant'
+                                                        sleep 0.5
                                                         ip.save
                                                     else
                                                         ip.variants << ShopifyAPI::Variant.new(
@@ -334,6 +335,7 @@ module Monitoring
                                                             :option1 => option
                                                         )
                                                         p 'add variant'
+                                                        sleep 0.5
                                                         ip.save
                                                     end
                                                     simple.update_attributes(shopify_product_id: ip.variants.last.id)
@@ -342,8 +344,10 @@ module Monitoring
                                             ip.variants.first.destroy if ip.variants.count > 2
                                         else
                                             if product.special_price == nil
+                                                sleep 0.5
                                                 ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.price.to_i, 'barcode': product.ean, 'weight': product.weight, "inventory_policy": "continue", "inventory_management": "shopify", 'inventory_quantity': simples[0].qty, 'option1': simples[0].size )
                                             else
+                                                sleep 0.5
                                                 ip.variants.first.update_attributes( 'sku': product.sku, 'price': product.special_price.to_i, 'compare_at_price': product.price.to_i, 'barcode': product.ean, 'weight': product.weight, 'inventory_quantity': simples[0].qty, "inventory_policy": "continue", "inventory_management": "shopify", 'option1': simples[0].size )
                                             end
                                         end
